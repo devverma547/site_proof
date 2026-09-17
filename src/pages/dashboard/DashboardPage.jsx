@@ -107,8 +107,10 @@ export default function DashboardPage() {
 
   const handleQuickScan = (e) => {
     e?.preventDefault();
-    if (!quickScanUrl.trim()) return;
-    setTargetScanUrl(quickScanUrl.trim());
+    const raw = quickScanUrl.trim();
+    if (!raw) return;
+    const clean = raw.startsWith('http://') || raw.startsWith('https://') ? raw : `https://${raw}`;
+    setTargetScanUrl(clean);
     setTargetScanGithubRepo(quickScanGithubRepo.trim());
     setIsScanModalOpen(true);
   };

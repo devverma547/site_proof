@@ -425,42 +425,59 @@ export const scannerService = {
   getReportByScanId: async (scanId) => {
     if (!scanId) return { success: false, error: 'Scan ID is required' };
 
+    // 1. Check reportCache (which checks local storage first, then Supabase storage)
     const cached = await reportCache.get(scanId);
     if (cached) {
       return { success: true, data: cached, source: 'storage' };
     }
 
-    const scan = await scanService.getById(scanId);
-    if (scan) {
-      return {
-        success: true,
-        source: 'supabase',
-        data: {
-          scanId: scan.id,
-          url: scan.url,
-          domain: scan.domain,
-          overallScore: scan.overall_score,
-          scores: {
-            security: scan.security_score,
-            performance: scan.performance_score,
-            seo: scan.seo_score,
-            accessibility: scan.accessibility_score,
-            bestPractices: scan.best_practices_score,
+    // 2. Check urlCache if scanId is a URL or domain name
+    const cleanId = String(scanId).trim();
+    const isUrlLike = cleanId.includes('.') || cleanId.startsWith('http');
+    if (isUrlLike) {
+      const fullUrl = cleanId.startsWith('http') ? cleanId : `https://${cleanId}`;
+      const cachedByUrl = urlCache.get(fullUrl) || urlCache.get(cleanId);
+      if (cachedByUrl) {
+        return { success: true, data: cachedByUrl, source: 'urlCache' };
+      }
+    }
+
+    // 3. Fallback to Supabase Database
+    try {
+      const scan = await scanService.getById(scanId);
+      if (scan) {
+        return {
+          success: true,
+          source: 'supabase',
+          data: {
+            scanId: scan.id,
+            url: scan.url,
+            domain: scan.domain,
+            overallScore: scan.overall_score,
+            scores: {
+              security: scan.security_score,
+              performance: scan.performance_score,
+              seo: scan.seo_score,
+              accessibility: scan.accessibility_score,
+              bestPractices: scan.best_practices_score,
+            },
+            riskLevel: scan.risk_level,
+            issuesCount: scan.issues_count,
+            criticalCount: scan.critical_count,
+            summary: scan.summary,
+            createdAt: scan.created_at,
+            issues: null,
+            modules: null,
+            recommendations: null,
+            webVitals: null,
+            techStack: null,
+            aiReport: null,
+            needsRescan: true,
           },
-          riskLevel: scan.risk_level,
-          issuesCount: scan.issues_count,
-          criticalCount: scan.critical_count,
-          summary: scan.summary,
-          createdAt: scan.created_at,
-          issues: null,
-          modules: null,
-          recommendations: null,
-          webVitals: null,
-          techStack: null,
-          aiReport: null,
-          needsRescan: true,
-        },
-      };
+        };
+      }
+    } catch {
+      // Supabase unavailable or invalid UUID format
     }
 
     return { success: false, error: 'Report not found' };

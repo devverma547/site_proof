@@ -18,6 +18,10 @@ import { emailService } from './email.service';
 
 export const reportCache = {
   async save(scanId, reportData) {
+    // 1. Always persist to localStorage first so reports load instantly and reliably
+    saveReportLocally(scanId, reportData);
+
+    // 2. Persist to Supabase Storage if configured and available
     try {
       const fileName = `${scanId}.json`;
       const { error } = await supabase.storage
@@ -26,27 +30,42 @@ export const reportCache = {
           contentType: 'application/json',
           upsert: true,
         });
-      if (error) throw error;
+      if (error) {
+        console.warn('[ReportCache] Supabase storage upload warning:', error.message);
+      }
     } catch (e) {
       console.warn('[ReportCache] Failed to save to Supabase:', e.message);
-      saveReportLocally(scanId, reportData);
     }
   },
 
   async get(scanId) {
+    if (!scanId) return null;
+
+    // 1. Check local storage first (instant 0ms response)
+    const localReport = getLocalReport(scanId);
+    if (localReport) return localReport;
+
+    // 2. Try Supabase storage if available
     try {
       const fileName = `${scanId}.json`;
       const { data, error } = await supabase.storage
         .from('reports')
         .download(fileName);
       
-      if (error || !data) return null;
-      
-      const text = await data.text();
-      return JSON.parse(text);
+      if (!error && data) {
+        const text = await data.text();
+        const parsed = JSON.parse(text);
+        if (parsed) {
+          saveReportLocally(scanId, parsed);
+          return parsed;
+        }
+      }
     } catch {
-      return getLocalReport(scanId);
+      // Fall through
     }
+
+    // 3. Fallback to local scan search
+    return getLocalReport(scanId);
   },
 
   async remove(scanId) {
@@ -152,8 +171,38 @@ function saveReportLocally(scanId, reportData) {
 function getLocalReport(scanId) {
   if (typeof localStorage === 'undefined' || !scanId) return null;
   try {
-    const report = localStorage.getItem(getLocalReportKey(scanId));
-    return report ? JSON.parse(report) : null;
+    // 1. Direct scan ID key lookup
+    const direct = localStorage.getItem(getLocalReportKey(scanId));
+    if (direct) return JSON.parse(direct);
+
+    // 2. Scan localStorage for reports matching scanId, ID, or URL/domain
+    const cleanQuery = String(scanId).toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('siteproof-report-') || key.startsWith('siteproof-url-cache-'))) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const item = JSON.parse(raw);
+          const data = item?.data || item;
+          if (!data) continue;
+
+          if (data.scanId === scanId || data.id === scanId) {
+            return data;
+          }
+
+          if (cleanQuery && data.url) {
+            const itemCleanUrl = String(data.url).toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+            if (itemCleanUrl === cleanQuery || itemCleanUrl.split('/')[0] === cleanQuery) {
+              return data;
+            }
+          }
+        } catch {
+          // ignore malformed entry
+        }
+      }
+    }
+    return null;
   } catch {
     return null;
   }

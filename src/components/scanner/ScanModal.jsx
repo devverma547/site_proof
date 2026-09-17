@@ -24,6 +24,7 @@ export default function ScanModal({ isOpen, onClose, targetUrl, githubRepo }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [logs, setLogs] = useState([]);
   const [generatedReportId, setGeneratedReportId] = useState(null);
+  const [completedReportData, setCompletedReportData] = useState(null);
   const [scanError, setScanError] = useState(null);
   const scanTriggered = useRef(false);
 
@@ -33,6 +34,7 @@ export default function ScanModal({ isOpen, onClose, targetUrl, githubRepo }) {
       setCurrentStepIndex(0);
       setLogs([]);
       setGeneratedReportId(null);
+      setCompletedReportData(null);
       setScanError(null);
       scanTriggered.current = false;
       return;
@@ -88,6 +90,7 @@ export default function ScanModal({ isOpen, onClose, targetUrl, githubRepo }) {
 
         if (res.success && res.data) {
           setGeneratedReportId(res.data.scanId);
+          setCompletedReportData(res.data);
           setProgress(100);
           setCurrentStepIndex(steps.length - 1);
           const newLogs = [
@@ -308,7 +311,12 @@ export default function ScanModal({ isOpen, onClose, targetUrl, githubRepo }) {
               onClick={() => {
                 onClose();
                 const targetId = generatedReportId || displayUrl.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-                navigate(`/report/${targetId}`, { state: { githubRepo } });
+                navigate(`/report/${targetId}`, { 
+                  state: { 
+                    githubRepo,
+                    reportData: completedReportData || null
+                  } 
+                });
               }}
               className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
                 isFinished

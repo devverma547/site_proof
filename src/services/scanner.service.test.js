@@ -27,10 +27,12 @@ vi.mock('./database.service', () => ({
   scanService: {
     create: vi.fn(),
     complete: vi.fn(),
-    fail: vi.fn()
+    fail: vi.fn(),
+    getById: vi.fn(),
   },
   reportCache: {
-    save: vi.fn()
+    save: vi.fn(),
+    get: vi.fn(),
   },
   urlCache: {
     get: vi.fn(() => null),
@@ -219,5 +221,61 @@ describe('Scanner Service', () => {
     expect(result.data.observatory.grade).toBe('A+');
     expect(result.data.observatory.score).toBe(100);
     expect(result.data.scores.security).toBe(100);
+  });
+
+  describe('getReportByScanId', () => {
+    it('returns report from reportCache when available', async () => {
+      reportCache.get.mockResolvedValueOnce({ scanId: 'scan-cache-1', overallScore: 90, url: 'https://mysite.com' });
+
+      const res = await scannerService.getReportByScanId('scan-cache-1');
+
+      expect(res.success).toBe(true);
+      expect(res.data.overallScore).toBe(90);
+      expect(res.source).toBe('storage');
+    });
+
+    it('returns report from urlCache when ID is a domain or URL', async () => {
+      reportCache.get.mockResolvedValueOnce(null);
+      urlCache.get.mockImplementation((url) => {
+        if (url === 'https://example.com' || url === 'example.com') {
+          return { scanId: 'scan-url-1', overallScore: 88, url: 'https://example.com' };
+        }
+        return null;
+      });
+
+      const res = await scannerService.getReportByScanId('example.com');
+
+      expect(res.success).toBe(true);
+      expect(res.data.overallScore).toBe(88);
+      expect(res.source).toBe('urlCache');
+    });
+
+    it('returns report from supabase scanService if not in caches', async () => {
+      reportCache.get.mockResolvedValueOnce(null);
+      scanService.getById.mockResolvedValueOnce({
+        id: 'scan-db-1',
+        url: 'https://db-site.com',
+        domain: 'db-site.com',
+        overall_score: 85,
+        security_score: 90,
+        performance_score: 80,
+      });
+
+      const res = await scannerService.getReportByScanId('scan-db-1');
+
+      expect(res.success).toBe(true);
+      expect(res.data.overallScore).toBe(85);
+      expect(res.source).toBe('supabase');
+    });
+
+    it('returns report not found when all lookups fail', async () => {
+      reportCache.get.mockResolvedValueOnce(null);
+      scanService.getById.mockResolvedValueOnce(null);
+
+      const res = await scannerService.getReportByScanId('non-existent-id');
+
+      expect(res.success).toBe(false);
+      expect(res.error).toBe('Report not found');
+    });
   });
 });

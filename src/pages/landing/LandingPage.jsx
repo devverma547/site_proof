@@ -38,9 +38,12 @@ export default function LandingPage() {
 
   const handleStartScan = (e, customUrl = null, customGithubRepo = null) => {
     e?.preventDefault();
-    const target = customUrl || urlInput.trim() || 'https://your-site.com';
+    const rawTarget = customUrl || urlInput.trim() || 'https://vibe-codding-site.netlify.app';
+    const cleanTarget = rawTarget.startsWith('http://') || rawTarget.startsWith('https://')
+      ? rawTarget
+      : `https://${rawTarget}`;
     const targetRepo = customGithubRepo !== null ? customGithubRepo : githubRepoInput.trim();
-    setScanTargetUrl(target);
+    setScanTargetUrl(cleanTarget);
     setScanTargetGithubRepo(targetRepo);
     setIsScanModalOpen(true);
   };
@@ -259,7 +262,17 @@ export default function LandingPage() {
                     id="scan-input"
                     type="text"
                     value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/^https?:\/\//i, '');
+                      setUrlInput(clean);
+                    }}
+                    onPaste={(e) => {
+                      const pasted = e.clipboardData.getData('text');
+                      if (pasted && (pasted.startsWith('http://') || pasted.startsWith('https://'))) {
+                        e.preventDefault();
+                        setUrlInput(pasted.replace(/^https?:\/\//i, ''));
+                      }
+                    }}
                     placeholder="your-website.com"
                     className="w-full bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-gray-500 focus:outline-none font-mono font-medium"
                   />

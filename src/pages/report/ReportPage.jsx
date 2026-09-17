@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ShieldCheck, RefreshCw, Printer, AlertTriangle, CheckCircle2, 
-  XCircle, ArrowUpRight, Copy, Check, Sparkles, X, Code, Activity, GitBranch,
+  ShieldCheck, ShieldAlert, RefreshCw, Printer, AlertTriangle, CheckCircle2, 
+  XCircle, ArrowUpRight, ArrowRight, ExternalLink, Copy, Check, Sparkles, X, Code, Activity, GitBranch,
   Zap, Eye, Smartphone, FileText, Scale, Wrench, TrendingUp, Server, Palette,
   Globe, KeyRound
 } from 'lucide-react';
@@ -102,15 +102,25 @@ export default function ReportPage() {
   const { reportId } = useParams();
   const location = useLocation();
   const { user } = useAuth();
-  const [reportData, setReportData] = useState(null);
-  const [domainName, setDomainName] = useState(reportId || 'example.com');
-  const [githubRepoUrl, setGithubRepoUrl] = useState(location.state?.githubRepo || '');
-  const [targetScore, setTargetScore] = useState(0);
+  const passedReport = location.state?.reportData || null;
+  const [reportData, setReportData] = useState(passedReport);
+  const [domainName, setDomainName] = useState(() => {
+    if (passedReport?.url) {
+      return passedReport.url.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    }
+    return reportId ? reportId.replace(/^https?:\/\//, '').replace(/\/.*$/, '') : 'example.com';
+  });
+  const [githubRepoUrl, setGithubRepoUrl] = useState(() => {
+    return passedReport?.githubRepo || location.state?.githubRepo || '';
+  });
+  const [targetScore, setTargetScore] = useState(() => {
+    return passedReport?.aiReport?.healthScore ?? passedReport?.overallScore ?? 0;
+  });
 
   const [activeFixModal, setActiveFixModal] = useState(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [isRescanning, setIsRescanning] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(() => !passedReport);
   const [loadingStep, setLoadingStep] = useState(0);
   const [displayScore, setDisplayScore] = useState(0);
 
@@ -119,6 +129,13 @@ export default function ReportPage() {
     let isMounted = true;
     async function fetchReport() {
       if (!reportId) return;
+
+      // If full reportData was already delivered via navigation state, skip re-fetching
+      if (passedReport && (passedReport.scanId === reportId || passedReport.id === reportId)) {
+        setIsInitialLoading(false);
+        return;
+      }
+
       setIsInitialLoading(true);
       try {
         const res = await scannerService.getReportByScanId(reportId);
@@ -139,6 +156,25 @@ export default function ReportPage() {
         } else {
           const clean = reportId.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
           setDomainName(clean);
+
+          // If reportId looks like a website link or domain, auto-trigger a fresh live audit!
+          const looksLikeUrl = reportId.includes('.') || reportId.startsWith('http');
+          if (looksLikeUrl) {
+            const targetUrl = reportId.startsWith('http') ? reportId : `https://${reportId}`;
+            try {
+              const scanRes = await scannerService.analyzeSite(targetUrl, githubRepoUrl, user?.id || null, null, { forceRefresh: false });
+              if (!isMounted) return;
+              if (scanRes.success && scanRes.data) {
+                setReportData(scanRes.data);
+                const score = scanRes.data.aiReport?.healthScore ?? scanRes.data.overallScore ?? 0;
+                setTargetScore(score);
+                return;
+              }
+            } catch (scanErr) {
+              console.warn('[ReportPage] Direct URL auto-audit failed:', scanErr.message);
+            }
+          }
+
           setTargetScore(0);
         }
       } catch (err) {
@@ -208,8 +244,9 @@ export default function ReportPage() {
     setTimeout(() => setCopiedPrompt(false), 2000);
   };
 
-  const handleRescan = async () => {
-    const url = reportData?.url || `https://${domainName}`;
+  const handleRescan = async (customUrl = null) => {
+    const rawUrl = customUrl || reportData?.url || domainName;
+    const url = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
     setIsRescanning(true);
     setLoadingStep(0);
     setDisplayScore(0);
@@ -217,12 +254,11 @@ export default function ReportPage() {
     try {
       const res = await scannerService.analyzeSite(url, githubRepoUrl, user?.id || null, null, { forceRefresh: true });
       if (res.success && res.data) {
-        const reportRes = await scannerService.getReportByScanId(res.data.scanId);
-        if (reportRes.success && reportRes.data) {
-          setReportData(reportRes.data);
-          const score = reportRes.data.aiReport?.healthScore ?? reportRes.data.overallScore ?? 0;
-          setTargetScore(score);
-        }
+        setReportData(res.data);
+        const score = res.data.aiReport?.healthScore ?? res.data.overallScore ?? 0;
+        setTargetScore(score);
+        const clean = res.data.url?.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || domainName;
+        setDomainName(clean);
       }
     } catch (err) {
       console.error('Rescan failed:', err);
@@ -351,14 +387,60 @@ export default function ReportPage() {
 
   if (!isInitialLoading && !isRescanning && !reportData) {
     return (
-      <div className="w-full flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        <div className="text-center py-20 space-y-4">
-          <ShieldCheck size={48} className="mx-auto text-slate-300 dark:text-gray-600" />
-          <h2 className="text-xl font-bold text-slate-500 dark:text-gray-400">Report Not Found</h2>
-          <p className="text-sm text-slate-400 dark:text-gray-500">
-            This scan report could not be loaded. It may have expired or the scan ID is invalid.
-          </p>
-        </div>
+      <div className="w-full flex-1 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-24">
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-white/10 shadow-2xl text-center space-y-6"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-500 dark:text-amber-400 shadow-inner">
+            <ShieldAlert size={36} />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Report Not Found</h2>
+            <p className="text-sm text-slate-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
+              No previous audit was found for <span className="font-mono text-[#00F5A0] font-semibold">{domainName}</span>.
+              Ready to analyze this site? Run a live 12-module audit right now:
+            </p>
+          </div>
+
+          {/* Quick Scan Input directly on the Not Found screen */}
+          <form 
+            onSubmit={(e) => { 
+              e.preventDefault(); 
+              handleRescan(domainName); 
+            }} 
+            className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto"
+          >
+            <div className="flex-1 flex items-center px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-[#080C14] border border-slate-300 dark:border-white/10 focus-within:border-[#00F5A0]">
+              <span className="text-slate-400 font-mono text-xs mr-1">https://</span>
+              <input
+                type="text"
+                value={domainName.replace(/^https?:\/\//, '')}
+                onChange={(e) => setDomainName(e.target.value.replace(/^https?:\/\//, ''))}
+                placeholder="your-website.com"
+                className="w-full bg-transparent text-sm text-slate-900 dark:text-white font-mono focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-[#00F5A0] hover:bg-[#00E093] text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-[0_0_20px_rgba(0,245,160,0.3)] flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+            >
+              Start Live Audit <ArrowRight size={14} />
+            </button>
+          </form>
+
+          <div className="pt-2 flex items-center justify-center gap-4 text-xs text-slate-500 dark:text-gray-400 border-t border-slate-100 dark:border-white/5">
+            <Link to="/" className="hover:text-[#00F5A0] transition-colors flex items-center gap-1">
+              ← Return Home
+            </Link>
+            <span>•</span>
+            <Link to="/sample-report" className="hover:text-[#00F5A0] transition-colors flex items-center gap-1">
+              Explore Sample Report <ArrowUpRight size={12} />
+            </Link>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -1008,16 +1090,7 @@ export default function ReportPage() {
           </div>
         )}
 
-        {/* Empty state when no report data */}
-        {!isInitialLoading && !reportData && (
-          <div className="text-center py-20 space-y-4">
-            <ShieldCheck size={48} className="mx-auto text-slate-300 dark:text-gray-600" />
-            <h2 className="text-xl font-bold text-slate-500 dark:text-gray-400">Report Not Found</h2>
-            <p className="text-sm text-slate-400 dark:text-gray-500">
-              This scan report could not be loaded. It may have expired or the scan ID is invalid.
-            </p>
-          </div>
-        )}
+
 
       </div>
 
