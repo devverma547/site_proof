@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+# ==============================================================================
+# Git Pre-Commit Hook: Secret Leak Prevention
+# Blocks commits containing hardcoded secrets (API keys, tokens, credentials)
+# ==============================================================================
+
+echo "🔒 Running pre-commit secret leak scan..."
+
+# Patterns to scan in staged changes
+PATTERNS="nvapi-[a-zA-Z0-9_-]{20,}|sk-proj-[a-zA-Z0-9_-]{30,}|ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{50,}|AKIA[0-9A-Z]{16}|sk_live_[0-9a-zA-Z]{20,}|sk-ant-api03-[a-zA-Z0-9_-]{50,}"
+
+# Get staged additions/modifications (excluding deletions)
+STAGED_DIFF=$(git diff --cached -U0 --no-color -- ':(exclude)*.lock' ':(exclude)*.json' ':(exclude).env*' ':(exclude)*.md' ':(exclude)dist/*')
+
+MATCHES=$(echo "$STAGED_DIFF" | grep -E "^\+" | grep -E "$PATTERNS")
+
+if [ -n "$MATCHES" ]; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: Potential secret/API key detected in staged changes!"
+  echo "----------------------------------------------------------------------"
+  echo "$MATCHES" | head -n 5
+  echo "----------------------------------------------------------------------"
+  echo "Please remove hardcoded credentials and use environment variables instead."
+  echo "If this is a confirmed false positive, bypass with: git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Secret scan passed: No exposed credentials found."
+exit 0

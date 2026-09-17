@@ -93,8 +93,7 @@ export const handler = async (event) => {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: 'Failed to contact Mozilla Observatory API',
-        message: err.message,
+        error: 'Failed to contact security audit service. Please try again later.',
       }),
     };
   }

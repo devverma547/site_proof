@@ -6,6 +6,7 @@
 
 import { getCorsHeaders } from './utils/cors.mjs';
 import { verifySupabaseAuth } from './utils/auth.mjs';
+import { extractJSON } from './utils/json.mjs';
 
 const NVIDIA_API_BASE = 'https://integrate.api.nvidia.com/v1';
 const GITHUB_API = 'https://api.github.com';
@@ -77,7 +78,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error', message: err.message }),
+      body: JSON.stringify({ error: 'Internal server error. Please try again later.' }),
     };
   }
 };
@@ -451,20 +452,7 @@ function buildCodeQualityFallbackReport(githubRepoUrl, url, errorMsg = '', warni
   };
 }
 
-function extractJSON(text) {
-  if (!text || typeof text !== 'string') return null;
-  try { return JSON.parse(text.trim()); } catch {}
-  try {
-    const stripped = text.replace(/^[\s\S]*?```(?:json|JSON)?\s*\n?/, '').replace(/\n?\s*```[\s\S]*$/, '').trim();
-    if (stripped.startsWith('{') || stripped.startsWith('[')) return JSON.parse(stripped);
-  } catch {}
-  try {
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace > firstBrace) return JSON.parse(text.slice(firstBrace, lastBrace + 1));
-  } catch {}
-  return null;
-}
+
 
 function extractDomain(url) {
   try { return new URL(url).hostname; } catch { return url.replace(/^https?:\/\//, '').replace(/\/.*$/, ''); }

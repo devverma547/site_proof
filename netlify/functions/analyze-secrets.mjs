@@ -13,6 +13,9 @@
  *   4. Scan bundle content against 10+ high-precision secret signatures
  *   5. Redact all findings — never return raw keys
  *   6. Return structured JSON with findings, severity, and remediation
+ */
+
+import { lookup } from 'node:dns/promises';
 import { getCorsHeaders } from './utils/cors.mjs';
 import { verifySupabaseAuth } from './utils/auth.mjs';
 
@@ -172,7 +175,83 @@ const CHUNK_OVERLAP = 512;             // 512 byte overlap to catch tokens spann
 const PER_PATTERN_BUDGET_MS = 200;     // Max 200ms per pattern per chunk
 const TOTAL_SCAN_BUDGET_MS = 5000;     // Max 5s total scan time across all content
 
-// ─── SSRF URL Protection ──────────────────────────────────────────────────────
+// ─── SSRF URL & DNS Protection ────────────────────────────────────────────────
+
+/**
+ * Check whether an IP string belongs to a private, loopback, or metadata subnet
+ * @param {string} ip
+ * @returns {boolean} true if IP is private/internal
+ */
+export function isPrivateIp(ip) {
+  if (!ip || typeof ip !== 'string') return true;
+
+  // IPv6 checks
+  if (ip === '::1' || ip === '::' || ip.startsWith('fe80:') || ip.startsWith('fc00:') || ip.startsWith('fd00:')) {
+    return true;
+  }
+
+  const parts = ip.split('.').map(Number);
+  if (parts.length !== 4 || parts.some((p) => isNaN(p) || p < 0 || p > 255)) {
+    return false;
+  }
+
+  const [a, b] = parts;
+  // 127.0.0.0/8 (Loopback)
+  if (a === 127) return true;
+  // 10.0.0.0/8 (Private RFC 1918)
+  if (a === 10) return true;
+  // 172.16.0.0/12 (Private RFC 1918)
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  // 192.168.0.0/16 (Private RFC 1918)
+  if (a === 192 && b === 168) return true;
+  // 169.254.0.0/16 (Link-Local & Cloud Metadata 169.254.169.254)
+  if (a === 169 && b === 254) return true;
+  // 0.0.0.0/8 (Current network)
+  if (a === 0) return true;
+  // 100.64.0.0/10 (Carrier-Grade NAT)
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  // 192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24 (Documentation / Test-Net)
+  if ((a === 192 && b === 0) || (a === 198 && b === 51) || (a === 203 && b === 0)) return true;
+  // Multicast & Reserved
+  if (a >= 224) return true;
+
+  return false;
+}
+
+/**
+ * Perform DNS resolution check against DNS-based SSRF / Rebinding.
+ * TODO: For complete socket-level DNS rebinding immunity, pin the resolved IP at the TCP layer
+ * via custom http/https Agent or undici Client dispatcher.
+ * @param {string} hostname
+ * @returns {Promise<{ safe: boolean, reason?: string, ip?: string }>}
+ */
+export async function verifyDnsResolution(hostname) {
+  if (!hostname || typeof hostname !== 'string') {
+    return { safe: false, reason: 'Invalid hostname' };
+  }
+
+  // If already an IPv4 literal
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) {
+    return { safe: !isPrivateIp(hostname) };
+  }
+
+  try {
+    const addresses = await lookup(hostname, { all: true });
+    for (const record of addresses) {
+      if (isPrivateIp(record.address)) {
+        return {
+          safe: false,
+          reason: `Resolved to forbidden private/internal IP (${record.address})`,
+          ip: record.address,
+        };
+      }
+    }
+    return { safe: true, ip: addresses[0]?.address };
+  } catch (err) {
+    // If DNS resolution fails entirely, consider unsafe to fetch
+    return { safe: false, reason: `DNS resolution failed: ${err.message}` };
+  }
+}
 /**
  * Validate URL to prevent Server-Side Request Forgery (SSRF)
  * Blocks private IP ranges (RFC 1918), loopback, link-local/cloud metadata, non-http(s), and encoded formats.
@@ -349,7 +428,7 @@ export const handler = async (event) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(buildFallbackResult(null, `Scan error: ${err.message}`)),
+      body: JSON.stringify(buildFallbackResult(null, 'Scan error encountered')),
     };
   }
 };
@@ -422,6 +501,17 @@ async function fetchPage(url) {
   const urlCheck = isSafeUrl(url);
   if (!urlCheck.safe) {
     throw new Error(`SSRF Blocked: ${urlCheck.reason}`);
+  }
+
+  // DNS-based SSRF Resolution check
+  try {
+    const parsed = new URL(url);
+    const dnsCheck = await verifyDnsResolution(parsed.hostname);
+    if (!dnsCheck.safe) {
+      throw new Error(`SSRF Blocked: ${dnsCheck.reason}`);
+    }
+  } catch (err) {
+    if (err.message.startsWith('SSRF Blocked')) throw err;
   }
 
   const controller = new AbortController();
@@ -709,10 +799,10 @@ function isServiceRoleJwt(token) {
 // ─── Redaction Engine ─────────────────────────────────────────────────────────
 
 function redactSecret(value) {
-  if (!value || value.length < 8) return '****[REDACTED]';
+  if (!value || value.length < 6) return '****[REDACTED]';
 
-  // Show first 8-12 chars, mask the rest
-  const visiblePrefix = value.slice(0, Math.min(12, Math.floor(value.length * 0.2)));
+  // Cap visible prefix at max 6 characters (e.g., ghp_12... or sk-pro...)
+  const visiblePrefix = value.slice(0, Math.min(6, Math.max(3, Math.floor(value.length * 0.1))));
   return `${visiblePrefix}...****[REDACTED]`;
 }
 

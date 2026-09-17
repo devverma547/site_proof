@@ -7,6 +7,7 @@
 
 import { getCorsHeaders } from './utils/cors.mjs';
 import { verifySupabaseAuth } from './utils/auth.mjs';
+import { extractJSON } from './utils/json.mjs';
 
 const NVIDIA_API_BASE = 'https://integrate.api.nvidia.com/v1';
 
@@ -64,7 +65,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error', message: err.message }),
+      body: JSON.stringify({ error: 'Internal server error. Please try again later.' }),
     };
   }
 };
@@ -490,20 +491,7 @@ Execution Instructions:
 3. Deploy the updated build to production (e.g., Netlify, Vercel, or Git push). If automated deployment is not available in your environment, state the exact deploy commands or steps needed to publish the changes live.`;
 }
 
-function extractJSON(text) {
-  if (!text || typeof text !== 'string') return null;
-  try { return JSON.parse(text.trim()); } catch {}
-  try {
-    const stripped = text.replace(/^[\s\S]*?```(?:json|JSON)?\s*\n?/, '').replace(/\n?\s*```[\s\S]*$/, '').trim();
-    if (stripped.startsWith('{') || stripped.startsWith('[')) return JSON.parse(stripped);
-  } catch {}
-  try {
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace > firstBrace) return JSON.parse(text.slice(firstBrace, lastBrace + 1));
-  } catch {}
-  return null;
-}
+
 
 function deriveVerdict(score) {
   if (score >= 90) return 'Production Ready';

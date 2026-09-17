@@ -1,12 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isSafeUrl } from '../../netlify/functions/analyze-secrets.mjs';
+import { describe, it, expect, vi } from 'vitest';
+import { isSafeUrl, isPrivateIp, verifyDnsResolution } from '../../netlify/functions/analyze-secrets.mjs';
 import { isAllowedOrigin, getCorsHeaders } from '../../netlify/functions/utils/cors.mjs';
 import { verifySupabaseAuth } from '../../netlify/functions/utils/auth.mjs';
+import { extractJSON } from '../../netlify/functions/utils/json.mjs';
 import { authService } from './auth.service';
 import { supabase } from '../config/supabase';
 
 describe('Security & Hardening Suite', () => {
-  describe('SSRF Protection (isSafeUrl)', () => {
+  describe('SSRF Protection (isSafeUrl & DNS)', () => {
     it('allows valid public HTTPS and HTTP URLs', () => {
       expect(isSafeUrl('https://example.com').safe).toBe(true);
       expect(isSafeUrl('http://github.com/my-repo').safe).toBe(true);
@@ -61,6 +62,22 @@ describe('Security & Hardening Suite', () => {
     it('rejects malformed URLs', () => {
       expect(isSafeUrl('').safe).toBe(false);
       expect(isSafeUrl('not-a-url').safe).toBe(false);
+    });
+
+    it('correctly identifies private IPs via isPrivateIp', () => {
+      expect(isPrivateIp('127.0.0.1')).toBe(true);
+      expect(isPrivateIp('10.0.5.1')).toBe(true);
+      expect(isPrivateIp('172.16.0.1')).toBe(true);
+      expect(isPrivateIp('192.168.1.100')).toBe(true);
+      expect(isPrivateIp('169.254.169.254')).toBe(true);
+      expect(isPrivateIp('::1')).toBe(true);
+      expect(isPrivateIp('8.8.8.8')).toBe(false);
+      expect(isPrivateIp('1.1.1.1')).toBe(false);
+    });
+
+    it('resolves and verifies public hostnames via verifyDnsResolution', async () => {
+      const res = await verifyDnsResolution('example.com');
+      expect(res.safe).toBe(true);
     });
   });
 
@@ -134,6 +151,28 @@ describe('Security & Hardening Suite', () => {
 
       const token = await authService.getSessionToken();
       expect(token).toBeNull();
+    });
+  });
+
+  describe('Shared extractJSON Utility', () => {
+    it('parses raw JSON strings', () => {
+      expect(extractJSON('{"healthScore": 85}')).toEqual({ healthScore: 85 });
+    });
+
+    it('extracts JSON from markdown code blocks', () => {
+      const md = '```json\n{"summary": "Audit complete", "score": 90}\n```';
+      expect(extractJSON(md)).toEqual({ summary: 'Audit complete', score: 90 });
+    });
+
+    it('extracts JSON with surrounding conversational text', () => {
+      const conversational = 'Here is the report:\n{"verdict": "Production Ready"}\nHope this helps!';
+      expect(extractJSON(conversational)).toEqual({ verdict: 'Production Ready' });
+    });
+
+    it('returns null for invalid or empty text', () => {
+      expect(extractJSON('')).toBeNull();
+      expect(extractJSON(null)).toBeNull();
+      expect(extractJSON('No JSON here')).toBeNull();
     });
   });
 });
