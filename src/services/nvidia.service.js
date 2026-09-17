@@ -10,6 +10,20 @@
  */
 import { calculateProjectedScore, normalizeActionPlanImpacts, formatAiFixPrompt } from '../utils/reportScoring';
 import { isValidGithubRepo } from '../utils/validators';
+import { authService } from './auth.service';
+
+async function getAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  try {
+    const token = await authService.getSessionToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch {
+    // Ignore in unauthenticated/testing contexts
+  }
+  return headers;
+}
 
 /**
  * Execute parallel AI analysis for PageSpeed + GitHub Code Quality
@@ -58,9 +72,10 @@ export async function analyzeWithAI(pageSpeedData, githubRepoUrl, url, inFlightC
  */
 export async function fetchPageSpeedAnalysis(pageSpeedData, url) {
   try {
+    const headers = await getAuthHeaders();
     const response = await fetch('/.netlify/functions/analyze-pagespeed', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ pageSpeedData, url }),
     });
 
@@ -86,9 +101,10 @@ export async function fetchPageSpeedAnalysis(pageSpeedData, url) {
  */
 export async function fetchCodeAnalysis(githubRepoUrl, url) {
   try {
+    const headers = await getAuthHeaders();
     const response = await fetch('/.netlify/functions/analyze-code', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ githubRepoUrl, url }),
     });
 

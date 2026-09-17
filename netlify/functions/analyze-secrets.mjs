@@ -13,7 +13,8 @@
  *   4. Scan bundle content against 10+ high-precision secret signatures
  *   5. Redact all findings — never return raw keys
  *   6. Return structured JSON with findings, severity, and remediation
- */
+import { getCorsHeaders } from './utils/cors.mjs';
+import { verifySupabaseAuth } from './utils/auth.mjs';
 
 // ─── Secret Signature Patterns ────────────────────────────────────────────────
 // Each pattern: { id, name, regex, severity, prefix (for fast pre-filter), remediation }
@@ -171,15 +172,128 @@ const CHUNK_OVERLAP = 512;             // 512 byte overlap to catch tokens spann
 const PER_PATTERN_BUDGET_MS = 200;     // Max 200ms per pattern per chunk
 const TOTAL_SCAN_BUDGET_MS = 5000;     // Max 5s total scan time across all content
 
+// ─── SSRF URL Protection ──────────────────────────────────────────────────────
+/**
+ * Validate URL to prevent Server-Side Request Forgery (SSRF)
+ * Blocks private IP ranges (RFC 1918), loopback, link-local/cloud metadata, non-http(s), and encoded formats.
+ * @param {string} rawUrl 
+ * @returns {{ safe: boolean, reason?: string, url?: string }}
+ */
+export function isSafeUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') {
+    return { safe: false, reason: 'Missing or invalid URL' };
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(rawUrl.trim());
+  } catch {
+    return { safe: false, reason: 'Malformed URL' };
+  }
+
+  // 1. Only allow HTTP and HTTPS
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return { safe: false, reason: `Disallowed protocol: ${parsed.protocol}. Only http: and https: are allowed.` };
+  }
+
+  // 2. Reject credentials in URL
+  if (parsed.username || parsed.password) {
+    return { safe: false, reason: 'URLs with embedded credentials are not allowed.' };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (!hostname) {
+    return { safe: false, reason: 'Missing hostname.' };
+  }
+
+  // 3. Reject local and internal hostnames
+  if (
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    hostname.endsWith('.local') ||
+    hostname.endsWith('.internal') ||
+    hostname.endsWith('.arpa') ||
+    hostname.endsWith('.onion')
+  ) {
+    return { safe: false, reason: 'Local or internal hostnames are forbidden (SSRF protection).' };
+  }
+
+  // 4. Reject Cloud Provider Metadata hostnames
+  if (
+    hostname === 'metadata.google.internal' ||
+    hostname === 'instance-data' ||
+    hostname === 'metadata'
+  ) {
+    return { safe: false, reason: 'Cloud instance metadata services are forbidden.' };
+  }
+
+  // 5. IPv6 checks
+  const cleanHost = hostname.startsWith('[') && hostname.endsWith(']')
+    ? hostname.slice(1, -1)
+    : hostname;
+
+  if (
+    cleanHost === '::1' ||
+    cleanHost === '::' ||
+    cleanHost.startsWith('fe80:') ||
+    cleanHost.startsWith('fc00:') ||
+    cleanHost.startsWith('fd00:')
+  ) {
+    return { safe: false, reason: 'Private or loopback IPv6 addresses are forbidden.' };
+  }
+
+  // 6. Decimal / Hex / Octal integer IP formats
+  if (/^\d+$/.test(cleanHost) || /^0x[0-9a-f]+$/i.test(cleanHost) || /^0[0-7]+$/.test(cleanHost)) {
+    return { safe: false, reason: 'Non-standard IP encodings are forbidden.' };
+  }
+
+  // 7. IPv4 Range checks
+  const ipv4Match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(cleanHost);
+  if (ipv4Match) {
+    const parts = [Number(ipv4Match[1]), Number(ipv4Match[2]), Number(ipv4Match[3]), Number(ipv4Match[4])];
+    if (parts.some((p) => p < 0 || p > 255)) {
+      return { safe: false, reason: 'Invalid IPv4 octets.' };
+    }
+
+    const [a, b] = parts;
+
+    // 127.0.0.0/8 (Loopback)
+    if (a === 127) return { safe: false, reason: 'Loopback IP addresses (127.0.0.0/8) are forbidden.' };
+
+    // 10.0.0.0/8 (Private RFC 1918)
+    if (a === 10) return { safe: false, reason: 'Private IP addresses (10.0.0.0/8) are forbidden.' };
+
+    // 172.16.0.0/12 (Private RFC 1918)
+    if (a === 172 && b >= 16 && b <= 31) return { safe: false, reason: 'Private IP addresses (172.16.0.0/12) are forbidden.' };
+
+    // 192.168.0.0/16 (Private RFC 1918)
+    if (a === 192 && b === 168) return { safe: false, reason: 'Private IP addresses (192.168.0.0/16) are forbidden.' };
+
+    // 169.254.0.0/16 (Link-Local & Cloud Metadata 169.254.169.254)
+    if (a === 169 && b === 254) return { safe: false, reason: 'Link-local & cloud metadata addresses (169.254.0.0/16) are forbidden.' };
+
+    // 0.0.0.0/8 (Current network)
+    if (a === 0) return { safe: false, reason: 'Zero-address network is forbidden.' };
+
+    // 100.64.0.0/10 (Carrier-Grade NAT)
+    if (a === 100 && b >= 64 && b <= 127) return { safe: false, reason: 'Carrier-grade NAT addresses (100.64.0.0/10) are forbidden.' };
+
+    // 192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24 (Documentation / Test-Net)
+    if ((a === 192 && b === 0) || (a === 198 && b === 51) || (a === 203 && b === 0)) {
+      return { safe: false, reason: 'Reserved documentation/testing IP addresses are forbidden.' };
+    }
+
+    // Multicast & Reserved (224.0.0.0/4 and above)
+    if (a >= 224) return { safe: false, reason: 'Multicast and reserved addresses are forbidden.' };
+  }
+
+  return { safe: true, url: parsed.href };
+}
+
 // ─── Core Handler ─────────────────────────────────────────────────────────────
 
 export const handler = async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
+  const headers = getCorsHeaders(event);
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
@@ -187,6 +301,16 @@ export const handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+  }
+
+  // Verify Supabase JWT Authentication
+  const auth = await verifySupabaseAuth(event);
+  if (!auth.authenticated) {
+    return {
+      statusCode: auth.statusCode || 401,
+      headers,
+      body: JSON.stringify({ error: auth.error || 'Unauthorized' }),
+    };
   }
 
   try {
@@ -200,7 +324,20 @@ export const handler = async (event) => {
       };
     }
 
-    const scanResult = await scanForSecrets(url);
+    // SSRF URL Validation
+    const urlValidation = isSafeUrl(url);
+    if (!urlValidation.safe) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: `Invalid URL: ${urlValidation.reason}`,
+          isBlocked: true,
+        }),
+      };
+    }
+
+    const scanResult = await scanForSecrets(urlValidation.url || url);
 
     return {
       statusCode: 200,
@@ -282,6 +419,11 @@ async function scanForSecrets(url) {
 // ─── HTML Fetcher ─────────────────────────────────────────────────────────────
 
 async function fetchPage(url) {
+  const urlCheck = isSafeUrl(url);
+  if (!urlCheck.safe) {
+    throw new Error(`SSRF Blocked: ${urlCheck.reason}`);
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
 
@@ -334,10 +476,12 @@ function extractScriptSources(html, baseUrl) {
       continue;
     }
 
-    // Resolve relative URLs
+    // Resolve relative URLs and enforce SSRF check
     try {
       const resolved = new URL(src, baseUrl).href;
-      sources.push(resolved);
+      if (isSafeUrl(resolved).safe) {
+        sources.push(resolved);
+      }
     } catch {
       // Skip malformed URLs
     }
@@ -368,8 +512,11 @@ async function downloadBundles(urls) {
   const MAX_BUNDLE_SIZE = 2 * 1024 * 1024; // 2MB per bundle
   const TIMEOUT_MS = 6000;
 
+  // Filter out any unsafe / internal URLs
+  const safeUrls = (urls || []).filter((u) => isSafeUrl(u).safe);
+
   const results = await Promise.allSettled(
-    urls.map(async (bundleUrl) => {
+    safeUrls.map(async (bundleUrl) => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 

@@ -7,6 +7,8 @@
  * Pattern: Matches observatory.service.js structure (direct API → proxy fallback → fallback result)
  */
 
+import { authService } from './auth.service';
+
 const DEFAULT_TIMEOUT_MS = 6000;
 
 /**
@@ -85,9 +87,19 @@ export async function fetchSecretsScan(url, options = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+    const headers = { 'Content-Type': 'application/json' };
+    try {
+      const token = await authService.getSessionToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    } catch {
+      // Ignore unauthenticated
+    }
+
     const response = await fetch('/.netlify/functions/analyze-secrets', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ url }),
       signal: controller.signal,
     });

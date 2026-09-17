@@ -8,6 +8,8 @@
  * numerical scores (0-100+), tests passed/failed/total, and direct MDN report links.
  */
 
+import { authService } from './auth.service';
+
 const MOZILLA_OBSERVATORY_API = 'https://observatory-api.mdn.mozilla.net/api/v2/scan';
 const DEFAULT_TIMEOUT_MS = 10000;
 
@@ -131,9 +133,19 @@ export async function fetchObservatoryScan(urlOrHost, options = {}) {
       const proxyController = new AbortController();
       const proxyTimer = setTimeout(() => proxyController.abort(), 6000);
 
+      const headers = { 'Content-Type': 'application/json' };
+      try {
+        const token = await authService.getSessionToken();
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      } catch {
+        // Ignore unauthenticated
+      }
+
       const proxyRes = await fetch(`${window.location.origin}/.netlify/functions/analyze-observatory`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ host }),
         signal: proxyController.signal,
       });

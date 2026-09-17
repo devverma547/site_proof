@@ -5,15 +5,13 @@
  * Performance, SEO, Security, Accessibility, Best Practices.
  */
 
+import { getCorsHeaders } from './utils/cors.mjs';
+import { verifySupabaseAuth } from './utils/auth.mjs';
+
 const NVIDIA_API_BASE = 'https://integrate.api.nvidia.com/v1';
 
 export const handler = async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
+  const headers = getCorsHeaders(event);
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
@@ -21,6 +19,16 @@ export const handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+  }
+
+  // Verify Supabase JWT Authentication
+  const auth = await verifySupabaseAuth(event);
+  if (!auth.authenticated) {
+    return {
+      statusCode: auth.statusCode || 401,
+      headers,
+      body: JSON.stringify({ error: auth.error || 'Unauthorized' }),
+    };
   }
 
   try {
@@ -72,7 +80,7 @@ const CATEGORY_CONFIGS_5 = [
 ];
 
 async function callNvidiaPageSpeedAI(pageSpeedData, url) {
-  const apiKey = process.env.NVIDIA_API_KEY || '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';
+  const apiKey = process.env.NVIDIA_API_KEY;
   const model = process.env.NVIDIA_MODEL || 'deepseek-ai/deepseek-v4-flash-0731';
 
   if (!apiKey) {

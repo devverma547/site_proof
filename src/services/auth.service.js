@@ -74,6 +74,16 @@ export const authService = {
     }
   },
 
+  getSessionToken: async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data?.session) return null;
+      return data.session.access_token || null;
+    } catch {
+      return null;
+    }
+  },
+
   forgotPassword: async (email) => {
     try {
       const baseUrl = import.meta.env.BASE_URL || '/';

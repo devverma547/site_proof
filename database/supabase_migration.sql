@@ -128,50 +128,51 @@ ON CONFLICT (id) DO UPDATE SET
 
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Users can upload own reports'
-  ) THEN
-    CREATE POLICY "Users can upload own reports"
-      ON storage.objects FOR INSERT TO authenticated
-      WITH CHECK (bucket_id = 'reports');
-  END IF;
+  -- Drop redundant or overly broad policies on reports bucket
+  DROP POLICY IF EXISTS "Users can upload own reports" ON storage.objects;
+  DROP POLICY IF EXISTS "Users can upload their own reports" ON storage.objects;
+  DROP POLICY IF EXISTS "Users can read their own reports" ON storage.objects;
+  DROP POLICY IF EXISTS "Users can update their own reports" ON storage.objects;
+  DROP POLICY IF EXISTS "Users can delete their own reports" ON storage.objects;
+  DROP POLICY IF EXISTS "Users can view own reports" ON storage.objects;
+  DROP POLICY IF EXISTS "Users can update own reports" ON storage.objects;
+  DROP POLICY IF EXISTS "Users can delete own reports" ON storage.objects;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Users can view own reports'
-  ) THEN
-    CREATE POLICY "Users can view own reports"
-      ON storage.objects FOR SELECT TO authenticated
-      USING (bucket_id = 'reports' AND owner_id = (SELECT auth.uid()::text));
-  END IF;
+  -- 1. INSERT: Secure ownership check ensuring users can only insert objects they own
+  CREATE POLICY "Users can upload own reports"
+    ON storage.objects FOR INSERT TO authenticated
+    WITH CHECK (
+      bucket_id = 'reports' AND
+      (auth.uid() = owner OR auth.uid()::text = owner_id)
+    );
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Users can update own reports'
-  ) THEN
-    CREATE POLICY "Users can update own reports"
-      ON storage.objects FOR UPDATE TO authenticated
-      USING (bucket_id = 'reports' AND owner_id = (SELECT auth.uid()::text))
-      WITH CHECK (bucket_id = 'reports' AND owner_id = (SELECT auth.uid()::text));
-  END IF;
+  -- 2. SELECT: Secure ownership check ensuring users can only read their own objects
+  CREATE POLICY "Users can view own reports"
+    ON storage.objects FOR SELECT TO authenticated
+    USING (
+      bucket_id = 'reports' AND
+      (auth.uid() = owner OR auth.uid()::text = owner_id)
+    );
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Users can delete own reports'
-  ) THEN
-    CREATE POLICY "Users can delete own reports"
-      ON storage.objects FOR DELETE TO authenticated
-      USING (bucket_id = 'reports' AND owner_id = (SELECT auth.uid()::text));
-  END IF;
+  -- 3. UPDATE: Secure ownership check ensuring users can only update their own objects
+  CREATE POLICY "Users can update own reports"
+    ON storage.objects FOR UPDATE TO authenticated
+    USING (
+      bucket_id = 'reports' AND
+      (auth.uid() = owner OR auth.uid()::text = owner_id)
+    )
+    WITH CHECK (
+      bucket_id = 'reports' AND
+      (auth.uid() = owner OR auth.uid()::text = owner_id)
+    );
+
+  -- 4. DELETE: Secure ownership check ensuring users can only delete their own objects
+  CREATE POLICY "Users can delete own reports"
+    ON storage.objects FOR DELETE TO authenticated
+    USING (
+      bucket_id = 'reports' AND
+      (auth.uid() = owner OR auth.uid()::text = owner_id)
+    );
 END $$;
 
 -- ==================

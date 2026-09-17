@@ -5,13 +5,11 @@
  * Bypasses any browser CORS or strict corporate proxy limitations.
  */
 
+import { getCorsHeaders } from './utils/cors.mjs';
+import { verifySupabaseAuth } from './utils/auth.mjs';
+
 export const handler = async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
+  const headers = getCorsHeaders(event);
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
@@ -22,6 +20,16 @@ export const handler = async (event) => {
       statusCode: 405,
       headers,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
+    };
+  }
+
+  // Verify Supabase JWT Authentication
+  const auth = await verifySupabaseAuth(event);
+  if (!auth.authenticated) {
+    return {
+      statusCode: auth.statusCode || 401,
+      headers,
+      body: JSON.stringify({ error: auth.error || 'Unauthorized' }),
     };
   }
 
