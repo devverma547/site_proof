@@ -11,6 +11,7 @@
 import { calculateProjectedScore, normalizeActionPlanImpacts, formatAiFixPrompt } from '../utils/reportScoring';
 import { isValidGithubRepo } from '../utils/validators';
 import { authService } from './auth.service';
+import { buildModules } from './lighthouse.service';
 
 async function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -135,7 +136,9 @@ export function mergeParallelReports(pageSpeedReport, codeReport, pageSpeedData,
   ];
 
   // 1. Audit Breakdown (Merge 12 modules from pageSpeedData with AI recommendations)
-  const base12Modules = pageSpeedData?.modules || [];
+  const base12Modules = pageSpeedData?.modules?.length > 0
+    ? pageSpeedData.modules
+    : buildModules(pageSpeedData?.scores || {}, pageSpeedData?.audits || {}, pageSpeedData?.categories || {}, pageSpeedData?.observatory || null);
   const aiBreakdownMap = new Map((pageSpeedReport.auditBreakdown || []).map((m) => [m.id, m]));
   
   const auditBreakdown = base12Modules.map((baseMod) => {
@@ -233,7 +236,9 @@ function buildClientFallbackReport(pageSpeedData, url, githubRepoUrl = '') {
   const scores = pageSpeedData.scores || {};
   const overall = pageSpeedData.overallScore || 50;
   const issues = pageSpeedData.issues || [];
-  const modules = pageSpeedData.modules || [];
+  const modules = pageSpeedData.modules?.length > 0
+    ? pageSpeedData.modules
+    : buildModules(scores, pageSpeedData.audits || {}, pageSpeedData.categories || {}, pageSpeedData.observatory || null);
 
   const auditBreakdown = modules.map((m) => ({
     id: m.id,

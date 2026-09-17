@@ -20,7 +20,7 @@
  *     8. Save report to Supabase + cache
  *     9. Return enriched report data
  */
-import { runLighthouseAnalysis } from './lighthouse.service';
+import { runLighthouseAnalysis, buildModules } from './lighthouse.service';
 import { analyzeWithAI, fetchCodeAnalysis } from './nvidia.service';
 import { fetchObservatoryScan } from './observatory.service';
 import { fetchSecretsScan } from './secrets.service';
@@ -96,8 +96,13 @@ export const scannerService = {
               issuesCount: cached.issuesCount,
               criticalCount: cached.criticalCount,
               summary: cached.summary,
+              modules: cached.modules || [],
+              issues: cached.issues || [],
+              webVitals: cached.webVitals || {},
+              techStack: cached.techStack || [],
               aiReport: cached.aiReport,
               observatory: cached.observatory || null,
+              secretsScan: cached.secretsScan || null,
               warnings: cached.warnings || [],
               isCached: true,
               cachedAt: cached.cachedAt,
@@ -407,6 +412,10 @@ export const scannerService = {
           issuesCount: lighthouseResults.issuesCount,
           criticalCount: lighthouseResults.criticalCount,
           summary: aiReport?.summary || lighthouseResults.summary,
+          modules: lighthouseResults.modules || [],
+          issues: lighthouseResults.issues || [],
+          webVitals: lighthouseResults.webVitals || {},
+          techStack: lighthouseResults.techStack || [],
           observatory: observatoryData || lighthouseResults.observatory || null,
           secretsScan: secretsData || lighthouseResults.secretsScan || null,
           aiReport,
@@ -467,7 +476,13 @@ export const scannerService = {
             summary: scan.summary,
             createdAt: scan.created_at,
             issues: null,
-            modules: null,
+            modules: typeof buildModules === 'function' ? buildModules({
+              security: scan.security_score,
+              performance: scan.performance_score,
+              seo: scan.seo_score,
+              accessibility: scan.accessibility_score,
+              bestPractices: scan.best_practices_score,
+            }) : [],
             recommendations: null,
             webVitals: null,
             techStack: null,

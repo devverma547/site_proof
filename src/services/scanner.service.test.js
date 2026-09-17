@@ -7,7 +7,8 @@ import { fetchSecretsScan } from './secrets.service';
 import { scanService, reportCache, urlCache } from './database.service';
 
 vi.mock('./lighthouse.service', () => ({
-  runLighthouseAnalysis: vi.fn()
+  runLighthouseAnalysis: vi.fn(),
+  buildModules: vi.fn(() => []),
 }));
 
 vi.mock('./observatory.service', () => ({

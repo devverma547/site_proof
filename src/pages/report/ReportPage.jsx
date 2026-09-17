@@ -5,9 +5,10 @@ import {
   ShieldCheck, ShieldAlert, RefreshCw, Printer, AlertTriangle, CheckCircle2, 
   XCircle, ArrowUpRight, ArrowRight, ExternalLink, Copy, Check, Sparkles, X, Code, Activity, GitBranch,
   Zap, Eye, Smartphone, FileText, Scale, Wrench, TrendingUp, Server, Palette,
-  Globe, KeyRound
+  Globe, KeyRound, Layers
 } from 'lucide-react';
 import { scannerService } from '../../services/scanner.service';
+import { buildModules } from '../../services/lighthouse.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { calculateProjectedScore, normalizeActionPlanImpacts } from '../../utils/reportScoring';
 
@@ -36,11 +37,20 @@ const categoryIcons = {
   'ui/ux': Smartphone,
   uiux: Smartphone,
   mobile: Smartphone,
+  mobileux: Smartphone,
+  mobileUx: Smartphone,
+  pwa: Globe,
+  pwaoffline: Globe,
+  pwaOffline: Globe,
+  uirender: Layers,
+  uiRender: Layers,
   content: FileText,
   legal: Scale,
   technical: Wrench,
   business: TrendingUp,
   infrastructure: Server,
+  aiprompt: Sparkles,
+  aiPrompt: Sparkles,
   'secret-scan': KeyRound,
   secretScan: KeyRound,
   privacyData: KeyRound,
@@ -49,8 +59,13 @@ const categoryIcons = {
 };
 
 function getCategoryIcon(id) {
-  const key = (id || '').toLowerCase().replace(/\s+/g, '-');
-  return categoryIcons[key] || ShieldCheck;
+  if (!id) return ShieldCheck;
+  if (categoryIcons[id]) return categoryIcons[id];
+  const key = (id || '').toLowerCase().replace(/[\s\-_]+/g, '');
+  for (const [k, v] of Object.entries(categoryIcons)) {
+    if (k.toLowerCase().replace(/[\s\-_]+/g, '') === key) return v;
+  }
+  return ShieldCheck;
 }
 
 // Source label helper
@@ -277,39 +292,32 @@ export default function ReportPage() {
     'mobileUx', 'pwaOffline', 'uiRender', 'infrastructure', 'aiPrompt'
   ]);
 
-  // Modules/audit breakdown: merge base modules with AI data, then enforce comingSoon
-  const baseModules = [...(reportData?.modules || [])];
-  
-  // If privacyData is missing (e.g., from an older scan), insert it so Secret Scanner is always visible
-  if (!baseModules.some(m => m.id === 'privacyData')) {
-    const leakCount = secretsScan?.totalLeaks || 0;
-    const privScore = leakCount === 0 ? '10.0' : Math.max(1, (10 - leakCount * 2.5)).toFixed(1);
-    baseModules.push({
-      id: 'privacyData',
-      title: 'Privacy & Data Security',
-      score: privScore,
-      description: leakCount === 0
-        ? `Clean client bundle scan · ${secretsScan?.bundlesScanned || 0} JS bundle(s) audited. Zero leaked secrets or credentials.`
-        : `🚨 ${leakCount} exposed secret(s) found in client bundles. Immediate remediation required.`,
-      checks: secretsScan?.checks && secretsScan.checks.length > 0 ? secretsScan.checks : [
-        { status: 'pass', label: 'No exposed API keys or secrets detected in client bundles' },
-        { status: 'pass', label: 'Client-side scripts verified secure' },
-        { status: 'pass', label: 'No Supabase service_role or payment keys exposed' },
-      ],
-      source: 'siteproof-secret-scanner',
-      secretsScan,
-      comingSoon: false,
-    });
-  }
+  // Modules/audit breakdown:
+  // 1. Build baseline 12 modules (ensures all 12 modules exist: 6 real + 6 coming soon / conditional)
+  const baseline12 = buildModules(
+    reportData?.scores || {},
+    reportData?.audits || {},
+    reportData?.categories || {},
+    observatory
+  );
 
+  const rawModules = Array.isArray(reportData?.modules) && reportData.modules.length > 0
+    ? reportData.modules
+    : [];
+  const rawModuleMap = new Map(rawModules.map(m => [m.id, m]));
   const aiBreakdownMap = new Map((ai?.auditBreakdown || []).map(m => [m.id, m]));
-  const modules = baseModules.map(m => {
-    const aiMod = aiBreakdownMap.get(m.id);
-    const merged = aiMod ? { ...m, ...aiMod } : m;
+
+  const modules = baseline12.map(baseMod => {
+    const rawMod = rawModuleMap.get(baseMod.id);
+    const aiMod = aiBreakdownMap.get(baseMod.id);
+
+    let merged = { ...baseMod };
+    if (rawMod) merged = { ...merged, ...rawMod };
+    if (aiMod) merged = { ...merged, ...aiMod };
 
     // Privacy & Data Security module (powered by Secret & Bundle Scanner)
-    if (m.id === 'privacyData') {
-      const scan = secretsScan || m.secretsScan;
+    if (baseMod.id === 'privacyData') {
+      const scan = secretsScan || merged.secretsScan;
       const leakCount = scan?.totalLeaks || 0;
       const privScore = leakCount === 0 ? '10.0' : Math.max(1, (10 - leakCount * 2.5)).toFixed(1);
       return {
@@ -331,18 +339,45 @@ export default function ReportPage() {
       };
     }
 
-    // Enforce comingSoon on future modules (even if old data doesn't have the flag)
-    if (COMING_SOON_MODULE_IDS.has(m.id)) {
-      return { ...merged, comingSoon: true, score: null, checks: [], description: 'Scanner not available yet. This module will be added in a future update.' };
+    // Enforce comingSoon on future modules
+    if (COMING_SOON_MODULE_IDS.has(baseMod.id)) {
+      return {
+        ...merged,
+        comingSoon: true,
+        score: null,
+        checks: [],
+        description: 'Scanner not available yet. This module will be added in a future update.',
+      };
     }
+
     // Code Quality module: needs GitHub repo to work
-    if (m.id === 'codeQuality' && !githubRepoUrl) {
-      return { ...merged, needsGithub: true, score: null, checks: [], description: 'Provide your GitHub repository link when scanning to unlock this module.' };
+    if (baseMod.id === 'codeQuality') {
+      if (!githubRepoUrl) {
+        return {
+          ...merged,
+          needsGithub: true,
+          comingSoon: false,
+          score: null,
+          checks: [],
+          description: 'Provide your GitHub repository link when scanning to unlock this module.',
+        };
+      } else {
+        return {
+          ...merged,
+          needsGithub: false,
+          comingSoon: merged.checks && merged.checks.length > 0 ? false : true,
+        };
+      }
     }
+
     return { ...merged, comingSoon: false, needsGithub: false };
   });
-  if (modules.length === 0 && ai?.auditBreakdown) {
-    modules.push(...ai.auditBreakdown.map(m => ({ ...m, comingSoon: COMING_SOON_MODULE_IDS.has(m.id) })));
+
+  // Also include any extra custom modules from rawModules not in baseline12
+  for (const m of rawModules) {
+    if (!modules.some(mod => mod.id === m.id)) {
+      modules.push(m);
+    }
   }
   
   // Fix prompts: prefer AI data, fallback to PageSpeed recommendations
@@ -351,8 +386,8 @@ export default function ReportPage() {
   // Tech stack
   const techStack = ai?.techStack || reportData?.techStack || [];
   
-  // Stats — only count checks from real (non-comingSoon) modules
-  const realModulesOnly = modules.filter(m => !m.comingSoon);
+  // Stats — only count checks from real (non-comingSoon, non-needsGithub) modules
+  const realModulesOnly = modules.filter(m => !m.comingSoon && !m.needsGithub);
   const stats = ai?.stats || {
     passedChecks: realModulesOnly.reduce((sum, m) => sum + (m.checks || []).filter(c => c.status === 'pass').length, 0),
     failedChecks: realModulesOnly.reduce((sum, m) => sum + (m.checks || []).filter(c => c.status === 'fail').length, 0),
