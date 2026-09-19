@@ -1,5 +1,5 @@
 /* oxlint-disable react/only-export-components */
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { authService } from '../services/auth.service';
 import { supabase } from '../config/supabase';
 
@@ -144,7 +144,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     isAuthenticated,
     isLoading,
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }) => {
     verifyEmail,
     googleSignIn,
     updateProfile
-  };
+  }), [user, isAuthenticated, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>
