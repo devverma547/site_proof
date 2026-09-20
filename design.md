@@ -1,136 +1,105 @@
-# 🎨 SiteProof — UI/UX Design Direction & Design System
+# UI/UX Design Direction
 
-<div align="center">
+## 1. Design goal
+SiteProof should feel like a premium technical SaaS product that inspires confidence. The experience should communicate intelligence, speed, and trust, while remaining simple enough for non-technical users to act on without confusion.
 
-<img src="./docs/assets/siteproof_overview.jpg" width="100%" alt="SiteProof UI Design System" />
+## 2. Brand personality
+The brand should feel:
+- modern
+- credible
+- technical
+- polished
+- conversion-focused
 
-**The Obsidian & Mint Cyberpunk Aesthetic for High-Trust Web Quality Audits**
+The tone is not playful or casual. It is confident, direct, and expert-led.
 
-[![Theme: Dark-First Obsidian](https://img.shields.io/badge/Theme-Dark--First%20Obsidian-080C14?style=for-the-badge&logoColor=00F5A0)](#)
-[![Accent: Electric Mint (#00F5A0)](https://img.shields.io/badge/Accent-Electric%20Mint%20%2300F5A0-00F5A0?style=for-the-badge&logoColor=080C14)](#)
-[![Typography: Plus Jakarta Sans + JetBrains Mono](https://img.shields.io/badge/Typography-Plus%20Jakarta%20%7C%20JetBrains-38BDF8?style=for-the-badge)](#)
+## 3. Visual identity
+### Core colors
+- primary accent: `#00F5A0`
+- dark base: `#080C14`
+- slate/neutral grays for content surfaces
+- cyan and blue accents for tech and data-rich UI moments
 
-</div>
+### Character
+- dark-first interface
+- strong glow and gradient accents
+- subtle glass or layered surfaces
+- structured cards and dense but readable information blocks
+- premium shadows and crisp contrast
 
----
+## 4. Layout system
+### Landing experience
+- a dramatic hero with clean value proposition and strong CTA
+- immediate UX signal: “enter URL and audit my site”
+- layered decorative backgrounds to feel high-end and technical
+- simple single-flow layout with strong conversion focus
 
-> [!TIP]
-> **💡 How to View Visual Markdown in your IDE:**
-> Press **`Ctrl + Shift + V`** (or click the **Open Preview to the Side** icon 📖 in the top-right corner of your editor window) to view the rendered images, diagrams, and live preview!
-> Below, we have also drawn the visual charts directly in text so they are visible even without preview mode.
+### Product/report experience
+- summary score cards at the top
+- issue severity chips that are instantly scannable
+- module panels that are easy to interpret
+- AI recommendations presented in a clear, actionable format
+- progress and loading states that communicate system activity without confusion
 
----
+## 5. UX principles
+### Clarity over complexity
+Users should understand the product and the result in seconds. They should not need documentation to know what a score means or what to do next.
 
-## 1. 🌟 Design Vision & Personality
+### Trust through evidence
+Show precise numbers, issue counts, severity labels, and technical details. Trust comes from specificity.
 
-SiteProof is designed to convey **instant technical authority, speed, and trust**. 
-It looks like a high-end security command center, but speaks in simple, friendly, and non-intimidating plain English.
+### Action before explanation
+The interface should direct users toward the next action: scan, review, fix, compare, and iterate.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        SITEPROOF VISUAL ESSENCE                        │
-├─────────────────────────┬──────────────────────────────────────────────┤
-│ 🌌 Dark Obsidian Canvas │ Deep #080C14 base with soft ambient glow     │
-│ 🟢 Electric Mint Accent │ #00F5A0 highlights for CTAs & high scores    │
-│ 🪟 Glassmorphism Layers │ Subtle translucent card surfaces (#0D1627)   │
-│ ⚡ Data Visualization   │ Circular radial progress dials & score chips │
-└─────────────────────────┴──────────────────────────────────────────────┘
-```
+## 6. Interaction design
+- subtle motion to reinforce product sophistication without distracting users
+- hover states with gentle depth and accent emphasis
+- strong focus states for keyboard accessibility
+- fast transitions that imply responsiveness and confidence
+- compact but readable data tables and cards
 
----
+## 7. Accessibility standards
+- maintain strong contrast on dark backgrounds
+- ensure all interactive elements are keyboard accessible
+- use semantic structure for headings, sections, and actions
+- provide clear visual feedback during scanning, submitting, and errors
+- prioritize legibility in small and medium-sized layouts
 
-## 2. 🎨 Color Token Palette
+## 8. Typography direction
+- strong sans-serif hierarchy
+- bold hero text with a high-contrast technical feel
+- monospace accents for technical labels, URLs, status codes, and metadata
+- concise text blocks that communicate value quickly without dense reading
 
-The entire color system is defined in `src/styles/tokens.css` using Tailwind CSS v4 custom theme tokens:
+## 9. Content tone
+The product should speak in a tone that is:
+- direct
+- optimistic
+- technical but accessible
+- confident without being overbearing
 
-| Token Name | Hex Code | RGB | Visual Preview | Purpose & Usage |
-| :--- | :--- | :--- | :---: | :--- |
-| `--color-brand` | `#00F5A0` | `0, 245, 160` | 🟢 | **Primary Accent**: CTAs, active states, circular gauge fills, success |
-| `--color-brand-hover` | `#00E093` | `0, 224, 147` | 🟢 | **Button Hover**: Hover state on primary interactive elements |
-| `--color-brand-obsidian`| `#080C14` | `8, 12, 20` | ⚫ | **Primary Canvas**: The deep dark background across all views |
-| `--color-card-bg` | `#0D1627` | `13, 22, 39` | 🌌 | **Card Surface**: Container cards, elevated modals, data tables |
-| `--color-card-border` | `rgba(0, 245, 160, 0.12)`| `0, 245, 160, 0.12` | ❇️ | **Subtle Glow Borders**: Thin 1px borders surrounding card elements |
-| `--color-secondary` | `#3B82F6` | `59, 130, 246` | 🔵 | **Tech Accent**: Secondary buttons, links, telemetry lines |
-| `--color-warning` | `#F59E0B` | `245, 158, 11` | 🟡 | **Warning**: Moderate severity flags, score tier 50–79 |
-| `--color-danger` | `#EF4444` | `239, 68, 68` | 🔴 | **Critical Alert**: Leaked secrets, missing security headers, score < 50 |
+## 10. Design system recommendations
+- rounded cards with thin borders and soft depth
+- standard badge system for severity levels
+- reusable button states: primary, secondary, ghost, destructive where needed
+- clean spacing rhythm for marketing, scan, and report screens
+- a small set of layout patterns reused consistently across the app
 
----
+## 11. Existing product direction to preserve
+The repo already demonstrates a strong direction that should remain central:
+- dark, premium SaaS aesthetic
+- green technical accent system
+- conversion-first landing page
+- data-dense dashboard/report interface
+- crisp modern motion and product polish
 
-## 3. ✍️ Typography & Font Hierarchy
+## 12. UX success checklist
+The design is successful if users can:
+- understand the product in under 5 seconds
+- submit a scan without friction
+- interpret results without training
+- see what matters most immediately
+- move from audit report to fix prompt with minimal confusion
 
-SiteProof uses three specialized Google Fonts tailored for modern web applications:
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ TYPOGRAPHY SCALE                                                       │
-├────────────────────────────────────────────────────────────────────────┤
-│ Title Headlines  : Outfit / Plus Jakarta Sans (Bold, high impact)      │
-│ Body & Subtitles : Plus Jakarta Sans / Inter (Crisp readability)       │
-│ Scores & Prompts : JetBrains Mono (Monospace precision, code boxes)    │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 4. 📐 Wireframe Layout Blueprints
-
-### 4.1 Landing Page Architecture (`/`)
-```
-+-------------------------------------------------------------------------+
-| [Logo: 🛡️ SiteProof]         About   Sample Report   Contact    [Log In] |
-+-------------------------------------------------------------------------+
-|                                                                         |
-|                Audit, Secure & Fix Your Website in 15s                 |
-|             The Quality & Remediation Engine for AI-Built Sites          |
-|                                                                         |
-|      +-----------------------------------------------------------+      |
-|      | 🔗 https://your-website.com            | [🚀 Run AI Audit] |      |
-|      +-----------------------------------------------------------+      |
-|              [Or view an interactive instant sample report ->]          |
-|                                                                         |
-|   [⚡ Core Web Vitals]   [🛡️ Mozilla Security]   [🔑 Secret Detection]  |
-|                                                                         |
-+-------------------------------------------------------------------------+
-```
-
-### 4.2 Report Dashboard Architecture (`/report/:reportId`)
-```
-+-------------------------------------------------------------------------+
-| 🌐 audit: example-site.com            Overall Score: [ 94 / 100 🟢 ]   |
-+-------------------------------------------------------------------------+
-|  [ ⚡ Performance: 91 ]  [ 🛡️ Security: A+ ]  [ 🔍 SEO: 98 ]  [ ♿ A11y: 95 ]  |
-+-------------------------------------------------------------------------+
-|                                                                         |
-|  📋 AI Plain-English Executive Summary                                  |
-|  "Your site loads in 1.2s and has great SEO. However, your CSP header  |
-|   is missing and your Google Analytics token was exposed in bundle.js"  |
-|                                                                         |
-|  🤖 Ready-to-Use AI Fix Prompt (Click to Copy)                          |
-|  +-------------------------------------------------------------------+  |
-|  | prompt: "Add strict Content-Security-Policy headers in           |  |
-|  | netlify.toml and move process.env.GA_TOKEN to serverless..."     |  |
-|  |                                                [📋 Copy Prompt]   |  |
-|  +-------------------------------------------------------------------+  |
-|                                                                         |
-|  📂 Detailed Modules:                                                   |
-|  - [⚡ Performance Deep Dive]    - [🛡️ Mozilla Observatory Breakdown]   |
-|  - [🔐 Secret Leak Analysis]     - [📦 GitHub Repo Inspection]         |
-+-------------------------------------------------------------------------+
-```
-
----
-
-## 5. 🧩 Component Anatomy
-
-### 5.1 Circular Score Gauges
-* **Radius & Stroke**: SVG circular rings with stroke dash-offset animations driven by Framer Motion.
-* **Tier Colors**:
-  - `90 – 100`: Mint Green (`#00F5A0`) — Optimal / Production Ready
-  - `70 – 89`: Electric Cyan (`#38BDF8`) — Good / Minor Polish Needed
-  - `50 – 69`: Amber Gold (`#F59E0B`) — Fair / Noticeable Regressions
-  - `0 – 49`: Crimson Red (`#EF4444`) — Critical Fix Required
-
-### 5.2 The AI Fix Prompt Card
-* Monospaced code box with syntax highlighting.
-* Instant 1-click **"Copy Prompt"** with visual checkmark feedback.
-* Targeted tool tags: `Cursor`, `Bolt.new`, `v0`, `Lovable`, `ChatGPT`.
+## 13. Product-level goal
+The interface should not merely display technical information; it should make the user feel that the product is a serious quality and remediation partner.

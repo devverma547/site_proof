@@ -1,156 +1,166 @@
-# 🛡️ SiteProof — Product Requirements Document (PRD)
+# Product Requirements Document (PRD)
 
-<div align="center">
+## 1. Product overview
+SiteProof is an AI-powered website quality and remediation platform built for founders, agencies, developers, and product teams who need to validate whether a site is launch-ready, client-ready, or fix-worthy.
 
-<img src="./docs/assets/siteproof_overview.jpg" width="100%" alt="SiteProof Dashboard Overview" />
+The core value proposition is simple: users paste a website URL, receive a fast technical audit, and get clear, actionable guidance to improve the site. SiteProof goes beyond static scoring by turning findings into AI-ready fix prompts that can be copied into coding tools such as Cursor, Bolt, v0, Lovable, or ChatGPT.
 
-**The Trust Layer & Quality Remediation Engine for AI-Built Websites**
+## 2. Problem we solve
+AI-generated and rapidly built websites often ship with issues that are hard to spot without specialized tooling:
+- performance regressions and poor Core Web Vitals
+- SEO and indexability problems
+- accessibility gaps
+- security header and compliance weaknesses
+- exposed client-side secrets or risky bundles
+- poor UX and conversion issues
+- vague or incomplete recommendations for remediation
 
-[![Status: Production-Ready MVP](https://img.shields.io/badge/Status-Production--Ready%20MVP-00F5A0?style=for-the-badge&logo=statuspage&logoColor=080C14)](#)
-[![Stack: React 19 + Netlify + Supabase](https://img.shields.io/badge/Stack-React%2019%20%7C%20Netlify%20%7C%20Supabase-38BDF8?style=for-the-badge&logo=react)](#)
-[![AI: NVIDIA NIM / DeepSeek](https://img.shields.io/badge/AI-NVIDIA%20NIM%20DeepSeek-76B900?style=for-the-badge&logo=nvidia)](#)
+Most teams do not have a fast, credible way to answer the question: "Is this site actually production-ready, and what should we fix first?"
 
-</div>
+## 3. Product vision
+SiteProof should become the trust layer for AI-built websites.
 
----
+It should help users move confidently from:
+- idea → live prototype
+- prototype → production-quality site
+- website → optimized, safer, and more conversion-ready experience
 
-> [!TIP]
-> **💡 How to View Visual Markdown in your IDE:**
-> Press **`Ctrl + Shift + V`** (or click the **Open Preview to the Side** icon 📖 in the top-right corner of your editor window) to view the rendered images, diagrams, and live preview!
-> Below, we have also drawn the visual charts directly in text so they are visible even without preview mode.
+## 4. Target users
+### 4.1 Founders and small business owners
+They need a fast read on launch quality, SEO health, and conversion blockers without hiring an expensive audit team.
 
----
+### 4.2 Agencies and freelancers
+They need a fast way to generate client-ready reports, identify risks, and communicate improvements clearly.
 
-## 1. 🎯 Product Vision & Core Mission
+### 4.3 AI-assisted developers and vibe coders
+They want technical issues explained in plain English and paired with direct AI prompts that can be fed back into their IDEs or AI coding workflow.
 
-> [!IMPORTANT]
-> **Core Philosophy: "Explain like I'm 5, Fix like a Staff Engineer."**
-> Rapid website builders, vibe coders, and non-technical founders often build websites without knowing whether their code leaks API secrets, violates security policies, or lags on mobile devices. SiteProof translates complex technical diagnostic data into **plain English insights** and **direct AI prompt fixes** you can copy-paste straight into tools like Cursor, Bolt, Lovable, v0, or ChatGPT.
+### 4.4 Product teams and review stakeholders
+They need a consistent scorecard and issue inventory to compare builds, identify regressions, and decide launch readiness.
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                SITEPROOF PRODUCT WORKFLOW                              │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                        │
-│   [ 🌐 Live Website URL ]                                                              │
-│              │                                                                         │
-│              ▼                                                                         │
-│   [ ⚡ Multi-Engine Parallel Audit ]                                                    │
-│      ├── Google PageSpeed Insights (Performance & SEO)                                 │
-│      ├── Mozilla Observatory API (HTTP Security Headers)                               │
-│      ├── Client Script Secret AST Scanner (Token Leaks)                                │
-│      └── GitHub Repository Inspector (Dependencies & Code Health)                      │
-│              │                                                                         │
-│              ▼                                                                         │
-│   [ 📊 Plain-English Health Scorecard (0-100 Score + Severity Chips) ]                 │
-│              │                                                                         │
-│              ▼                                                                         │
-│   [ 🤖 Actionable AI Remediation Fix Prompts (NVIDIA DeepSeek) ]                       │
-│              │                                                                         │
-│              ▼                                                                         │
-│   [ 💻 1-Click "Copy Prompt" -> Paste into Cursor / Bolt / v0 / ChatGPT ]             │
-│              │                                                                         │
-│              ▼                                                                         │
-│   [ 🚀 Fast, Hardened, and Verified Production Site ]                                  │
-│                                                                                        │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
+## 5. Core user journeys
+### Journey A: One-click audit
+1. User lands on the marketing site.
+2. User enters a URL and optional GitHub repository.
+3. Product runs a multi-layer scan.
+4. User sees an overall score, critical issues, and an AI summary.
+5. User takes the next action: fix, compare, or save the report.
 
-<div align="center">
+### Journey B: Authenticated history
+1. User creates an account or logs in.
+2. Product stores previous scan results.
+3. User revisits a prior report and compares quality over time.
+4. User reads recommendations and decides what to fix next.
 
-<img src="./docs/assets/siteproof_workflow.jpg" width="100%" alt="SiteProof Workflow Pipeline" />
+### Journey C: AI remediation workflow
+1. Product generates a structured AI prompt.
+2. User copies it into Cursor, v0, Bolt, or ChatGPT.
+3. User applies the requested changes.
+4. User re-runs the audit to validate the improvement.
 
-</div>
+## 6. Functional requirements
+### 6.1 Marketing and acquisition
+- polished landing page with a clear value proposition
+- high-visibility CTA to start a scan
+- trust-building copy and product proof points
+- persona-based messaging for founders, agencies, and developers
 
----
+### 6.2 Website scanning
+- accept a publicly accessible website URL
+- validate and sanitize the input before analysis
+- optionally accept a GitHub repo URL for deeper code inspection
+- support multi-step scanning without blocking the user interface
 
-## 2. 🧩 The Problems We Solve
+### 6.3 Audit modules
+The product must evaluate the site across these dimensions:
+- performance and Core Web Vitals
+- SEO and indexability
+- accessibility and usability
+- security headers and implementation risk
+- mobile responsiveness
+- UI and layout quality
+- content quality and clarity
+- legal and compliance signals
+- technical runtime health
+- conversion and funnel effectiveness
+- technology stack detection
+- AI-generated remediation guidance
 
-AI website generators and low-code platforms allow anyone to spin up a web app in minutes. However, they frequently suffer from silent, critical vulnerabilities:
+### 6.4 AI summary generation
+- summarize technical findings in readable language
+- rank issue severity clearly
+- generate actionable remediation recommendations
+- produce code-generation prompts suitable for AI-assisted development workflows
 
-| Category | Problem in AI-Generated Sites | How SiteProof Solves It |
-| :--- | :--- | :--- |
-| ⚡ **Performance** | Bloated bundles, unoptimized media, failing Core Web Vitals (LCP, CLS, FID) | Real-time PageSpeed Insights telemetry with exact asset optimization cues |
-| 🔒 **Security Headers** | Missing CSP, HSTS, X-Frame-Options (vulnerable to clickjacking & XSS) | Live Mozilla Observatory scan with letter grades and header configurations |
-| 🔑 **Secret Leaks** | Hardcoded API keys, Supabase service roles, AWS credentials in client JS | Regex-based client-bundle AST scanner with strict key masking |
-| 🔍 **SEO & Discoverability** | Broken meta tags, missing canonical URLs, unindexed SPAs | Technical SEO inspection checking robot tags, OpenGraph, and semantic tags |
-| 🧑‍💻 **Remediation Gap** | Users don't know what cryptic errors mean or how to write code to fix them | Generates structured code prompts with file context ready for AI code editors |
-| 🧪 **Demo Friction** | Non-technical users hesitate to test their live site or lack credentials | Zero-barrier interactive **Sample Report (`/sample-report`)** preview |
+### 6.5 User accounts and saved reports
+- allow account creation and login via Supabase auth
+- save reports associated with a user account
+- preserve report history and allow revisiting past scans
+- support comparison and trend review over time
 
----
+### 6.6 Security and safe operation
+- keep all sensitive keys and API tokens out of the browser
+- require secure backend processing for AI and external service calls
+- validate GitHub and URL inputs before use
+- detect leaked secrets or risky bundle behavior where possible
 
-## 3. 👥 Target Personas
+## 7. Non-functional requirements
+- each standard audit should complete within a realistic target of under 2 minutes
+- the UI should feel fast and responsive across desktop and mobile devices
+- the experience must degrade gracefully when external services fail or rate-limit
+- security headers and deployment hardening should be applied in production config
+- the product should be maintainable and extensible as the scan engine evolves
 
-```
-┌─────────────────────────┬─────────────────────────┬─────────────────────────┐
-│ NON-TECHNICAL FOUNDERS  │ VIBE CODERS & BUILDERS  │ AGENCIES & FREELANCERS  │
-├─────────────────────────┼─────────────────────────┼─────────────────────────┤
-│ • Understand launch     │ • Building with Cursor, │ • Client-ready audit    │
-│   readiness instantly.  │   Bolt, v0, Lovable.    │   reports & delivery.   │
-│ • Zero tech jargon.     │ • Rapid test-fix-retest │ • Demonstrable proof of │
-│ • Verify contractors'   │   workflow loop.        │   performance & SEO.    │
-│   deliverables.         │ • Copy-paste AI prompts.│ • Pre-launch checklist. │
-└─────────────────────────┴─────────────────────────┴─────────────────────────┘
-```
+## 8. Product success metrics
+The product is considered successful if it achieves:
+- reliable scan completion for valid public URLs
+- strong conversion from landing page visitors to starting a scan
+- users return to review previous reports
+- higher value perception from credible issue summaries and fix guidance
+- faster time-to-fix through actionable AI prompts
 
----
+## 9. Launch criteria
+The product is launch-ready when:
+- scan flow works reliably for real public sites
+- report output is clear, actionable, and trustworthy
+- auth and saved history work consistently
+- the UI looks polished and conversion-focused
+- deployment configuration is secure and stable
 
-## 4. 🧭 Core User Journeys
+## 10. Scope
+### In scope for launch
+- marketing site and onboarding flow
+- website scanning and audit workflow
+- AI remediation guidance
+- authenticated history and report persistence
+- secure backend orchestration and deployment integration
 
-### Journey A: Instant One-Click Audit (Zero Friction)
-1. User lands on homepage (`/`).
-2. Enters a URL (e.g., `https://my-site.com`) and optional GitHub repository.
-3. System runs parallel audits across PageSpeed, Mozilla Observatory, and Secret Scanner.
-4. Dashboard displays overall score (0–100), severity-ranked issues, and plain-English summary.
-5. User clicks **"Copy Fix Prompt"** and pastes into Cursor or ChatGPT to resolve the issue.
+### Out of scope for the initial launch
+- enterprise team workspaces
+- enterprise billing, quotas, and subscriptions
+- custom white-label flows for every client
+- advanced collaboration features
+- full multi-page workflow automation beyond the core audit experience
 
-### Journey B: Interactive Sample Report (No Website Needed)
-For visitors who don't yet have a live URL or want to explore SiteProof's capabilities before running a scan:
-1. User clicks **"View Sample Report"** on the landing page or navigates to `/sample-report`.
-2. The UI instantly loads an audited report demonstrating realistic scores, identified security vulnerabilities, and generated prompt solutions.
-3. User explores the module cards, toggles severity filters, and tests the "Copy Prompt" button.
+## 11. Product positioning
+SiteProof should position itself as:
+- the “quality control layer” for AI-generated websites
+- a technical audit tool that turns findings into action
+- a bridge between a live website and the fix workflow required to improve it
 
-### Journey C: Authenticated History & Trend Tracking
-1. User signs in with **Google OAuth** or email password via Supabase.
-2. Every scan performed is linked to their profile in the `scans` table.
-3. User visits `/dashboard` or `/history` to re-open past reports, track score improvements, and manage multiple domains.
+## 12. Risks and dependencies
+- external scan APIs may rate-limit requests or fail partially
+- some sites may block automated inspection or return inconsistent data
+- GitHub repo checks depend on repository accessibility and permissions
+- AI output quality depends on model quality and prompt design
 
----
+## 13. Functional acceptance criteria
+- A user can enter a URL and start a scan from the landing page.
+- The app returns an overall score and a clear list of issues.
+- The app identifies the most important security or SEO concerns.
+- Users can review prior reports when logged in.
+- The app keeps sensitive credentials server-side and never exposes them in the browser.
+- The interface remains responsive and easy to understand across common screen sizes.
 
-## 5. ⚙️ Scanning Modules Matrix
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              7-MODULE AUDIT TAXONOMY                                   │
-├─────────────────────────┬──────────────────────────────────────────────────────────────┤
-│ 1. Core Web Vitals      │ LCP, FID, CLS, Total Blocking Time, bundle load time         │
-│ 2. Technical SEO        │ Meta tags, OpenGraph, Twitter cards, viewport, canonicals    │
-│ 3. Accessibility        │ Color contrast ratios, image alt tags, ARIA roles, semantics │
-│ 4. Mozilla Observatory  │ CSP, HSTS, X-Frame-Options, X-Content-Type-Options (A+ to F) │
-│ 5. Secret Token Scanner │ 25+ AST regex checks for exposed API keys (masked to 6 chars)│
-│ 6. GitHub Code Quality  │ Dependency health, outdated packages, repo structure         │
-│ 7. NVIDIA AI Remediation│ Plain-English executive summaries & copyable Cursor prompts  │
-└─────────────────────────┴──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 6. 🔐 Security & Privacy Specifications
-
-> [!CAUTION]
-> **Client-Side Safety Rules**
-> - **Zero Key Exposure**: `NVIDIA_API_KEY` and Supabase Service Role keys are strictly kept on the server inside Netlify serverless functions.
-> - **SSRF Protection**: URL inputs are sanitized and restricted against loopback (`127.0.0.1`), link-local (`169.254.169.254`), and internal network addresses.
-> - **Secret Redaction**: When client secret leaks are detected, only the first 6 characters are rendered with the remainder masked (`ghp_123456••••••••`).
-> - **Lightweight Database footprint**: Supabase only stores lightweight scan metadata (~300 bytes) without persisting full raw page scrapes, protecting user confidentiality and database free tier storage.
-
----
-
-## 7. 🚀 Launch Criteria & Acceptance Matrix
-
-- [x] **Instant Scan**: Public website URL can be audited within 15–30 seconds.
-- [x] **Plain English Translation**: All warnings include a "Why this matters" explanation without developer jargon.
-- [x] **Copy-Paste Fix Prompts**: Users can click "Copy Prompt" and paste directly into Cursor or ChatGPT.
-- [x] **Demo Experience**: `/sample-report` allows visitors to inspect an interactive audit report immediately.
-- [x] **Supabase Authentication**: Users can log in with Google OAuth or Email and view scan history on `/history`.
-- [x] **Dark Obsidian Aesthetic**: High-end cyberpunk/SaaS aesthetic using `#080C14` and `#00F5A0` accents.
+## 14. Product direction summary
+The product should feel premium, technical, and dependable. It is not just a scanner; it is a decision-support system that helps users understand site quality, prioritize fixes, and act quickly with the help of AI.
