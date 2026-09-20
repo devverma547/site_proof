@@ -708,11 +708,22 @@ export default function ReportPage() {
         {/* SECTION: CORE WEB VITALS (real CrWUX data) */}
         {reportData && Object.values(webVitals).some(v => v !== null && v !== undefined) && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Core Web Vitals</h2>
-              <span className="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold uppercase tracking-wider">
-                Real User Data · Google CrUX
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold uppercase tracking-wider">
+                  Real User Data · Google CrUX
+                </span>
+                <a
+                  href={`https://pagespeed.web.dev/analysis?url=${encodeURIComponent(reportData?.url || (domainName?.startsWith('http') ? domainName : `https://${domainName}`))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1"
+                >
+                  <span>View on PageSpeed</span>
+                  <ArrowUpRight size={12} />
+                </a>
+              </div>
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -850,6 +861,34 @@ export default function ReportPage() {
                     </div>
 
                     <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">{m.description}</p>
+
+                    {/* Google PageSpeed Insights Highlight Banner if performance module */}
+                    {m.id === 'performance' && (
+                      <div className="p-3 rounded-xl bg-blue-500/5 dark:bg-blue-950/20 border border-blue-500/20 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Globe size={16} className="text-blue-500 shrink-0" />
+                          <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                            Google PageSpeed:
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border font-mono ${
+                            numericScore >= 8 ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' :
+                            numericScore >= 5 ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30' :
+                            'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30'
+                          }`}>
+                            Score {Math.round(numericScore * 10)}/100
+                          </span>
+                        </div>
+                        <a
+                          href={`https://pagespeed.web.dev/analysis?url=${encodeURIComponent(reportData?.url || (domainName?.startsWith('http') ? domainName : `https://${domainName}`))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
+                        >
+                          <span>View PageSpeed Report</span>
+                          <ArrowUpRight size={12} />
+                        </a>
+                      </div>
+                    )}
 
                     {/* Mozilla Observatory Highlight Banner if security module */}
                     {m.id === 'security' && (m.observatory || observatory) && (
