@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![SiteProof Overview](docs/assets/siteproof_overview.jpg)
+<img src="./docs/assets/siteproof_overview.jpg" width="100%" alt="SiteProof Dashboard Overview" />
 
 **The Trust Layer & Quality Remediation Engine for AI-Built Websites**
 
@@ -14,20 +14,53 @@
 
 ---
 
+> [!TIP]
+> **💡 How to View Visual Markdown in your IDE:**
+> Press **`Ctrl + Shift + V`** (or click the **Open Preview to the Side** icon 📖 in the top-right corner of your editor window) to view the rendered images, diagrams, and live preview!
+> Below, we have also drawn the visual charts directly in text so they are visible even without preview mode.
+
+---
+
 ## 1. 🎯 Product Vision & Core Mission
 
 > [!IMPORTANT]
 > **Core Philosophy: "Explain like I'm 5, Fix like a Staff Engineer."**
 > Rapid website builders, vibe coders, and non-technical founders often build websites without knowing whether their code leaks API secrets, violates security policies, or lags on mobile devices. SiteProof translates complex technical diagnostic data into **plain English insights** and **direct AI prompt fixes** you can copy-paste straight into tools like Cursor, Bolt, Lovable, v0, or ChatGPT.
 
-```mermaid
-flowchart LR
-    A[🌐 Live Website URL] --> B[⚡ SiteProof Multi-Engine Scan]
-    B --> C[📊 Plain-English Health Scorecard]
-    C --> D[🤖 Actionable AI Remediation Prompts]
-    D --> E[💻 1-Click Fix in Cursor / Bolt / v0 / ChatGPT]
-    E --> F[🚀 Launch-Ready & Verified Site]
 ```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                SITEPROOF PRODUCT WORKFLOW                              │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│   [ 🌐 Live Website URL ]                                                              │
+│              │                                                                         │
+│              ▼                                                                         │
+│   [ ⚡ Multi-Engine Parallel Audit ]                                                    │
+│      ├── Google PageSpeed Insights (Performance & SEO)                                 │
+│      ├── Mozilla Observatory API (HTTP Security Headers)                               │
+│      ├── Client Script Secret AST Scanner (Token Leaks)                                │
+│      └── GitHub Repository Inspector (Dependencies & Code Health)                      │
+│              │                                                                         │
+│              ▼                                                                         │
+│   [ 📊 Plain-English Health Scorecard (0-100 Score + Severity Chips) ]                 │
+│              │                                                                         │
+│              ▼                                                                         │
+│   [ 🤖 Actionable AI Remediation Fix Prompts (NVIDIA DeepSeek) ]                       │
+│              │                                                                         │
+│              ▼                                                                         │
+│   [ 💻 1-Click "Copy Prompt" -> Paste into Cursor / Bolt / v0 / ChatGPT ]             │
+│              │                                                                         │
+│              ▼                                                                         │
+│   [ 🚀 Fast, Hardened, and Verified Production Site ]                                  │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+<div align="center">
+
+<img src="./docs/assets/siteproof_workflow.jpg" width="100%" alt="SiteProof Workflow Pipeline" />
+
+</div>
 
 ---
 
@@ -48,25 +81,16 @@ AI website generators and low-code platforms allow anyone to spin up a web app i
 
 ## 3. 👥 Target Personas
 
-```mermaid
-mindmap
-  root((SiteProof Users))
-    Non-Technical Founders
-      Understand launch readiness
-      Zero technical jargon
-      Check contractor / agency work
-    Vibe Coders & AI Builders
-      Build with Cursor / Bolt / v0
-      Instant prompt to copy-paste back
-      Rapid test-fix-verify cycle
-    Agencies & Freelancers
-      Generate client audit reports
-      Demonstrate tangible value
-      Audit pre-handover deliverables
-    Growth & Marketing Teams
-      Fix Core Web Vitals for SEO
-      Optimize mobile page load speed
-      Eliminate conversion blockers
+```
+┌─────────────────────────┬─────────────────────────┬─────────────────────────┐
+│ NON-TECHNICAL FOUNDERS  │ VIBE CODERS & BUILDERS  │ AGENCIES & FREELANCERS  │
+├─────────────────────────┼─────────────────────────┼─────────────────────────┤
+│ • Understand launch     │ • Building with Cursor, │ • Client-ready audit    │
+│   readiness instantly.  │   Bolt, v0, Lovable.    │   reports & delivery.   │
+│ • Zero tech jargon.     │ • Rapid test-fix-retest │ • Demonstrable proof of │
+│ • Verify contractors'   │   workflow loop.        │   performance & SEO.    │
+│   deliverables.         │ • Copy-paste AI prompts.│ • Pre-launch checklist. │
+└─────────────────────────┴─────────────────────────┴─────────────────────────┘
 ```
 
 ---
@@ -74,81 +98,40 @@ mindmap
 ## 4. 🧭 Core User Journeys
 
 ### Journey A: Instant One-Click Audit (Zero Friction)
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Visitor / Founder
-    participant Web as SiteProof UI (Landing)
-    participant Engine as Parallel Scan Engine
-    participant AI as NVIDIA AI Nim
-    participant Report as Report Page
-
-    User->>Web: Enters URL (e.g., https://my-startup.com)
-    opt Optional GitHub Repo
-        User->>Web: Adds repo (owner/name)
-    end
-    Web->>Engine: Dispatches parallel scan requests
-    par Performance & SEO
-        Engine->>Engine: Google PageSpeed API
-    and Security Headers
-        Engine->>Engine: Mozilla Observatory API
-    and Secret Scanning
-        Engine->>Engine: Inspects script bundles for leaked tokens
-    end
-    Engine->>AI: Synthesizes findings into human narrative & fix prompts
-    AI-->>Engine: Structured JSON report
-    Engine-->>Report: Renders visual dashboard with score gauges
-    Report-->>User: Copies AI Prompt -> Pastes into Cursor / Bolt
-```
+1. User lands on homepage (`/`).
+2. Enters a URL (e.g., `https://my-site.com`) and optional GitHub repository.
+3. System runs parallel audits across PageSpeed, Mozilla Observatory, and Secret Scanner.
+4. Dashboard displays overall score (0–100), severity-ranked issues, and plain-English summary.
+5. User clicks **"Copy Fix Prompt"** and pastes into Cursor or ChatGPT to resolve the issue.
 
 ### Journey B: Interactive Sample Report (No Website Needed)
 For visitors who don't yet have a live URL or want to explore SiteProof's capabilities before running a scan:
-1. User clicks **"View Sample Report"** on the landing page or navigates to [`/sample-report`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/report/SampleReportPage.jsx).
+1. User clicks **"View Sample Report"** on the landing page or navigates to `/sample-report`.
 2. The UI instantly loads an audited report demonstrating realistic scores, identified security vulnerabilities, and generated prompt solutions.
 3. User explores the module cards, toggles severity filters, and tests the "Copy Prompt" button.
 
 ### Journey C: Authenticated History & Trend Tracking
 1. User signs in with **Google OAuth** or email password via Supabase.
-2. Every scan performed is linked to their profile in the [`scans`](file:///c:/Users/Lenovo/Documents/vibe%20codding/database/supabase_migration.sql) table.
-3. User visits [`/dashboard`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/dashboard/DashboardPage.jsx) or [`/history`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/history/HistoryPage.jsx) to re-open past reports, track score improvements, and manage multiple domains.
+2. Every scan performed is linked to their profile in the `scans` table.
+3. User visits `/dashboard` or `/history` to re-open past reports, track score improvements, and manage multiple domains.
 
 ---
 
-## 5. ⚙️ Functional Specifications
+## 5. ⚙️ Scanning Modules Matrix
 
-### 5.1 Scanning Modules
-SiteProof organizes all diagnostic checks into 7 cohesive modules:
-
-```mermaid
-graph TD
-    subgraph Audit Pipeline
-        M1[⚡ Performance & Core Web Vitals]
-        M2[🔍 SEO & Meta Indexability]
-        M3[♿ Accessibility & Contrast]
-        M4[🛡️ Mozilla Observatory Security]
-        M5[🔐 Client Secret Leak Scanner]
-        M6[📦 GitHub Code & Dependency Health]
-        M7[🤖 AI Remediation Prompt Engine]
-    end
-    M1 --> Synthesis[Aggregated Health Score 0-100]
-    M2 --> Synthesis
-    M3 --> Synthesis
-    M4 --> Synthesis
-    M5 --> Synthesis
-    M6 --> Synthesis
-    Synthesis --> M7
 ```
-
-* **Module 1: Performance**: LCP (Largest Contentful Paint), FID (First Input Delay), CLS (Cumulative Layout Shift), Total Blocking Time, bundle payloads.
-* **Module 2: SEO**: Meta title, description, viewport tag, robot indexing directives, OpenGraph tags, canonical URLs.
-* **Module 3: Accessibility**: Color contrast ratios, missing alt attributes on images, ARIA landmark roles, semantic heading structures.
-* **Module 4: Security Headers (Mozilla Observatory)**: Real-time scan measuring CSP (Content Security Policy), HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy.
-* **Module 5: Secret Scanner**: Extracts client script tags and evaluates against 25+ regex patterns (OpenAI, Supabase Service Keys, Stripe, GitHub PAT, AWS Access Keys). Masks leaked values to first 6 characters to prevent exposure.
-* **Module 6: GitHub Code Inspection**: Optional deep check analyzing `package.json`, dependency vulnerabilities, outdated libraries, and project structure.
-* **Module 7: NVIDIA AI Remediation Engine**: Feeds normalized issues into deep learning models (NVIDIA NIM / DeepSeek) to output:
-  - Executive summary in plain English.
-  - Priority-ordered fix recommendations.
-  - Ready-to-use AI prompts specifying the exact files and lines to modify.
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              7-MODULE AUDIT TAXONOMY                                   │
+├─────────────────────────┬──────────────────────────────────────────────────────────────┤
+│ 1. Core Web Vitals      │ LCP, FID, CLS, Total Blocking Time, bundle load time         │
+│ 2. Technical SEO        │ Meta tags, OpenGraph, Twitter cards, viewport, canonicals    │
+│ 3. Accessibility        │ Color contrast ratios, image alt tags, ARIA roles, semantics │
+│ 4. Mozilla Observatory  │ CSP, HSTS, X-Frame-Options, X-Content-Type-Options (A+ to F) │
+│ 5. Secret Token Scanner │ 25+ AST regex checks for exposed API keys (masked to 6 chars)│
+│ 6. GitHub Code Quality  │ Dependency health, outdated packages, repo structure         │
+│ 7. NVIDIA AI Remediation│ Plain-English executive summaries & copyable Cursor prompts  │
+└─────────────────────────┴──────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -168,6 +151,6 @@ graph TD
 - [x] **Instant Scan**: Public website URL can be audited within 15–30 seconds.
 - [x] **Plain English Translation**: All warnings include a "Why this matters" explanation without developer jargon.
 - [x] **Copy-Paste Fix Prompts**: Users can click "Copy Prompt" and paste directly into Cursor or ChatGPT.
-- [x] **Demo Experience**: [`/sample-report`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/report/SampleReportPage.jsx) allows visitors to inspect an interactive audit report immediately.
-- [x] **Supabase Authentication**: Users can log in with Google OAuth or Email and view scan history on [`/history`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/history/HistoryPage.jsx).
+- [x] **Demo Experience**: `/sample-report` allows visitors to inspect an interactive audit report immediately.
+- [x] **Supabase Authentication**: Users can log in with Google OAuth or Email and view scan history on `/history`.
 - [x] **Dark Obsidian Aesthetic**: High-end cyberpunk/SaaS aesthetic using `#080C14` and `#00F5A0` accents.

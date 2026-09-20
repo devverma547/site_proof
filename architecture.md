@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![SiteProof Architecture](docs/assets/siteproof_overview.jpg)
+<img src="./docs/assets/siteproof_workflow.jpg" width="100%" alt="SiteProof Workflow Diagram" />
 
 **High-Throughput Parallel Audit Pipeline with Serverless AI Orchestration**
 
@@ -15,77 +15,69 @@
 
 ---
 
-## 1. 🌐 System Topology Overview
+> [!TIP]
+> **💡 How to View Visual Markdown in your IDE:**
+> Press **`Ctrl + Shift + V`** (or click the **Open Preview to the Side** icon 📖 in the top-right corner of your editor window) to view the rendered images, diagrams, and live preview!
+> Below, we have also drawn the visual charts directly in text so they are visible even without preview mode.
 
-SiteProof separates concerns between an ultra-fast client-side React SPA, a secure serverless edge tier, and specialized third-party diagnostic and AI services:
+---
 
-```mermaid
-graph TB
-    subgraph Client Tier ["💻 Client Tier (Browser)"]
-        UI["React 19 SPA (Vite + Tailwind CSS v4)"]
-        Router["React Router 7 (Lazy Loaded Chunks)"]
-        State["Context State (Auth, Theme, Toast)"]
-        Cache["Browser Session & URL Cache"]
-        UI --> Router
-        UI --> State
-        UI --> Cache
-    end
+## 1. 🌐 Visual System Topology Chart
 
-    subgraph Edge Tier ["⚡ Netlify Serverless Edge Functions"]
-        FN_MAIN["analyze.mjs (Main Orchestrator)"]
-        FN_PS["analyze-pagespeed.mjs (PageSpeed AI)"]
-        FN_OBS["analyze-observatory.mjs (Mozilla Security)"]
-        FN_SEC["analyze-secrets.mjs (Bundle AST Scanner)"]
-        FN_CODE["analyze-code.mjs (GitHub Inspector)"]
-        Utils["Shared Utils (SSRF Protection, Auth, JSON parser)"]
-        
-        FN_MAIN --> Utils
-        FN_PS --> Utils
-        FN_OBS --> Utils
-        FN_SEC --> Utils
-        FN_CODE --> Utils
-    end
-
-    subgraph Data Tier ["🗄️ Cloud Data Tier (Supabase)"]
-        SupaAuth["Supabase Auth (Google OAuth & JWT)"]
-        SupaDB["PostgreSQL Database (RLS Enforced)"]
-        T_Prof[("profiles")]
-        T_Web[("websites")]
-        T_Scan[("scans (Metadata Only)")]
-        SupaDB --> T_Prof
-        SupaDB --> T_Web
-        SupaDB --> T_Scan
-    end
-
-    subgraph External Engines ["🔌 External Diagnostic & AI Services"]
-        PageSpeed["Google PageSpeed Insights API"]
-        Observatory["Mozilla Observatory API"]
-        NvidiaNIM["NVIDIA NIM AI (DeepSeek / Llama 3)"]
-        GitHubAPI["GitHub REST API"]
-    end
-
-    %% Interactions
-    UI -->|1. Sign in & session| SupaAuth
-    UI -->|2. Lightweight scan logs| SupaDB
-    UI -->|3. Public Performance Scan| PageSpeed
-    UI -->|4. Parallel Deep Analysis| Edge Tier
-
-    FN_PS -->|PageSpeed metrics + AI synthesis| NvidiaNIM
-    FN_OBS -->|HTTP Security Headers| Observatory
-    FN_SEC -->|Script tags inspection| UI
-    FN_CODE -->|Repo inspection| GitHubAPI
-    FN_CODE -->|Code review prompts| NvidiaNIM
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENT TIER (BROWSER SPA)                                 │
+│                                                                                        │
+│   [ ⚛️ React 19 SPA ] ──► [ 🗺️ React Router 7 ] ──► [ 📦 Session / URL Cache ]        │
+│          │                                                  │                          │
+│          ▼                                                  ▼                          │
+│   [ 🎨 Tailwind v4 ]                                 [ 🔐 Supabase Auth Context ]      │
+└──────────┬──────────────────────────────────────────────────┬──────────────────────────┘
+           │                                                  │
+           │  1. Run Public PageSpeed                         │  2. Dispatch Parallel
+           ▼                                                  ▼     Serverless Requests
+┌───────────────────────────────┐                  ┌─────────────────────────────────────┐
+│    GOOGLE PAGESPEED API       │                  │     NETLIFY FUNCTIONS EDGE TIER     │
+│                               │                  │                                     │
+│  • Largest Contentful Paint   │                  │  ├── analyze-pagespeed.mjs          │
+│  • First Input Delay          │                  │  ├── analyze-observatory.mjs        │
+│  • Cumulative Layout Shift    │                  │  ├── analyze-secrets.mjs            │
+│  • Performance & SEO Scores   │                  │  └── analyze-code.mjs               │
+└──────────┬────────────────────┘                  └──────────────┬──────────────────────┘
+           │                                                      │
+           │  3. Raw Metrics                                      │  4. Secure Server Calls
+           ▼                                                      ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        EXTERNAL DIAGNOSTIC & AI SERVICES                               │
+│                                                                                        │
+│   [ 🛡️ Mozilla Observatory ]      [ 🔑 Bundle AST Scanner ]    [ 🧠 NVIDIA DeepSeek ]  │
+│      • CSP, HSTS, X-Frame            • 25+ Secret Regexes         • Plain English Sum. │
+│      • A+ to F Grade Rating          • 6-Char Key Masking         • AI Fix Prompts     │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. ⚡ The "Split-the-Brain" Parallel Audit Pipeline
+## 2. ⚡ The "Split-the-Brain" Parallel Pipeline
 
-> [!TIP]
-> Traditional monolithic web audit engines can take 60–90 seconds and often hit cloud serverless execution timeouts (typically 10–26s on free tiers). SiteProof implements a **"Split-the-Brain" parallel architecture**:
-> - Client handles the fast public PageSpeed query directly.
-> - Client concurrently fans out sub-requests to isolated Netlify functions.
-> - Total scan completion drops to **15–25 seconds**, completely eliminating serverless timeouts.
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        PARALLEL AUDIT TIMELINE (~15 SECONDS TOTAL)                     │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ T=0s  : User inputs URL (e.g., https://my-site.com)                                    │
+│ T=1s  : Pending scan logged to Supabase [ sc_12345 ]                                   │
+│                                                                                        │
+│ T=2s  : PARALLEL DISPATCH (All tasks run at the same time):                            │
+│         ├── [Thread 1] Google PageSpeed API check           ────────► [ 4s done ]      │
+│         ├── [Thread 2] Mozilla Observatory Security Headers ────────► [ 8s done ]      │
+│         ├── [Thread 3] Client JavaScript Secret Leak Scan   ────────► [ 3s done ]      │
+│         └── [Thread 4] Optional GitHub Code Inspection      ────────► [ 5s done ]      │
+│                                                                                        │
+│ T=9s  : Aggregated findings sent to NVIDIA NIM AI (DeepSeek v4)                        │
+│ T=14s : Plain-English summary & 1-click Cursor/ChatGPT fix prompts returned            │
+│ T=15s : Final 7-Module Interactive Report rendered in Dashboard                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ```mermaid
 sequenceDiagram
@@ -130,23 +122,23 @@ sequenceDiagram
 
 ## 3. 🗺️ Frontend Route Architecture
 
-The frontend is built with **React 19** and **React Router 7**, employing an auto-recovering lazy-loading mechanism ([`lazyWithRetry`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/App.jsx#L15)) that automatically recovers from stale Vite chunk hashes during rolling deployments:
+The frontend is built with **React 19** and **React Router 7**, employing an auto-recovering lazy-loading mechanism (`lazyWithRetry`) that automatically recovers from stale Vite chunk hashes during rolling deployments:
 
 | Route Path | Component File | Auth State | Purpose |
 | :--- | :--- | :--- | :--- |
-| `/` | [`LandingPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/landing/LandingPage.jsx) | Public | High-converting hero, live URL scan bar, value propositions, FAQ |
-| `/sample-report` | [`SampleReportPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/report/SampleReportPage.jsx) | Public | Instant interactive demo report without needing a live URL |
-| `/report/:reportId` | [`ReportPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/report/ReportPage.jsx) | Public/Auth | Full 7-module audit dashboard, circular gauges, AI prompt copy tool |
-| `/dashboard` | [`DashboardPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/dashboard/DashboardPage.jsx) | Protected | User workspace, active monitored sites, recent scores |
-| `/history` | [`HistoryPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/history/HistoryPage.jsx) | Protected | Chronological archive of past audits with score trends |
-| `/login` | [`LoginPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/auth/LoginPage.jsx) | Guest | Google OAuth & Email/password login |
-| `/signup` | [`SignupPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/auth/SignupPage.jsx) | Guest | User registration with email verification |
-| `/forgot-password` | [`ForgotPasswordPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/auth/ForgotPasswordPage.jsx) | Guest | Password reset request form |
-| `/reset-password` | [`ResetPasswordPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/auth/ResetPasswordPage.jsx) | Guest | Set new password with Supabase token |
-| `/auth/callback` | [`AuthCallback.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/auth/AuthCallback.jsx) | Public | OAuth exchange handler for Google redirects |
-| `/about` | [`AboutPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/about/AboutPage.jsx) | Public | Product background, philosophy, and team mission |
-| `/contact` | [`ContactPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/contact/ContactPage.jsx) | Public | Support form and inquiry routing |
-| `/404` | [`NotFoundPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/errors/NotFoundPage.jsx) | Public | Graceful error state with return CTA |
+| `/` | `src/pages/landing/LandingPage.jsx` | Public | High-converting hero, live URL scan bar, value propositions, FAQ |
+| `/sample-report` | `src/pages/report/SampleReportPage.jsx` | Public | Instant interactive demo report without needing a live URL |
+| `/report/:reportId` | `src/pages/report/ReportPage.jsx` | Public/Auth | Full 7-module audit dashboard, circular gauges, AI prompt copy tool |
+| `/dashboard` | `src/pages/dashboard/DashboardPage.jsx` | Protected | User workspace, active monitored sites, recent scores |
+| `/history` | `src/pages/history/HistoryPage.jsx` | Protected | Chronological archive of past audits with score trends |
+| `/login` | `src/pages/auth/LoginPage.jsx` | Guest | Google OAuth & Email/password login |
+| `/signup` | `src/pages/auth/SignupPage.jsx` | Guest | User registration with email verification |
+| `/forgot-password` | `src/pages/auth/ForgotPasswordPage.jsx` | Guest | Password reset request form |
+| `/reset-password` | `src/pages/auth/ResetPasswordPage.jsx` | Guest | Set new password with Supabase token |
+| `/auth/callback` | `src/pages/auth/AuthCallback.jsx` | Public | OAuth exchange handler for Google redirects |
+| `/about` | `src/pages/about/AboutPage.jsx` | Public | Product background, philosophy, and team mission |
+| `/contact` | `src/pages/contact/ContactPage.jsx` | Public | Support form and inquiry routing |
+| `/404` | `src/pages/errors/NotFoundPage.jsx` | Public | Graceful error state with return CTA |
 
 ---
 
@@ -175,72 +167,36 @@ netlify/functions/
 
 > [!NOTE]
 > **Minimal Storage Pattern (~300 bytes per scan)**
-> To keep Supabase operating comfortably within free tier limits, SiteProof intentionally avoids saving large, bloated raw JSON trees or HTML snapshots to the database. Only core metadata (scores, timestamps, domain, user ID) is persisted in the [`scans`](file:///c:/Users/Lenovo/Documents/vibe%20codding/database/supabase_migration.sql#L52) table. Full diagnostic reports are cached in the browser's session storage and regenerated on-demand.
+> To keep Supabase operating comfortably within free tier limits, SiteProof intentionally avoids saving large raw JSON trees or HTML snapshots to the database. Only core metadata (scores, timestamps, domain, user ID) is persisted in the `scans` table. Full diagnostic reports are cached in the browser's session storage and regenerated on-demand.
 
-```mermaid
-erDiagram
-    PROFILES ||--o{ WEBSITES : manages
-    PROFILES ||--o{ SCANS : executes
-    WEBSITES ||--o{ SCANS : associates
-
-    PROFILES {
-        uuid id PK
-        text name
-        text avatar_url
-        text plan "free | pro | enterprise"
-        int scans_this_month
-        timestamp created_at
-    }
-
-    WEBSITES {
-        uuid id PK
-        uuid user_id FK
-        text url
-        text domain
-        text name
-        text github_repo
-        int last_score
-        timestamp last_scanned_at
-    }
-
-    SCANS {
-        uuid id PK
-        uuid user_id FK
-        uuid website_id FK
-        text url
-        text domain
-        text status "pending | running | completed | failed"
-        int overall_score
-        int security_score
-        int performance_score
-        int seo_score
-        int a11y_score
-        timestamp created_at
-    }
+```
+┌─────────────────────────┐       ┌─────────────────────────┐       ┌─────────────────────────┐
+│     public.profiles     │       │     public.websites     │       │      public.scans       │
+├─────────────────────────┤       ├─────────────────────────┤       ├─────────────────────────┤
+│ id (UUID, PK)           │◄──┐   │ id (UUID, PK)           │◄──┐   │ id (UUID, PK)           │
+│ name (TEXT)             │   │   │ user_id (UUID, FK) ─────┼───┘   │ user_id (UUID, FK)      │
+│ avatar_url (TEXT)       │   └───┼───► website_id (UUID)   │       │ website_id (UUID, FK) ──┼───┐
+│ plan (TEXT: free|pro)   │       │ url (TEXT)              │       │ url (TEXT)              │   │
+│ scans_this_month (INT)  │       │ domain (TEXT)           │       │ overall_score (INT)     │   │
+│ created_at (TIMESTAMPTZ)│       │ last_score (INT)        │       │ security_score (INT)    │   │
+│ updated_at (TIMESTAMPTZ)│       │ created_at (TIMESTAMPTZ)│       │ created_at (TIMESTAMPTZ)│   │
+└─────────────────────────┘       └─────────────────────────┘       └─────────────────────────┘   │
+                                                                                                  │
+                                  1 Website has Many Scans (Metadata Only) ───────────────────────┘
 ```
 
 ---
 
 ## 6. 🛡️ Security & Defensive Architecture
 
-SiteProof enforces multi-tiered defensive mechanisms across both the client and serverless boundaries:
-
-```mermaid
-graph LR
-    subgraph Inbound Protection
-        I1[URL Normalization] --> I2[SSRF Filter: Blocks Localhost & 169.254.169.254]
-    end
-    subgraph Processing Safety
-        P1[NVIDIA API Key Server-Only] --> P2[Secret Redaction: Masks to 6 Chars]
-        P2 --> P3[Generic 500 Responses: Zero Stack Leakage]
-    end
-    subgraph Browser Hardening
-        B1[Strict-Transport-Security] --> B2[X-Frame-Options: DENY]
-        B2 --> B3[X-Content-Type-Options: nosniff]
-        B3 --> B4[Content Security Policy]
-    end
 ```
-
-* **SSRF Mitigation**: URLs entered for scanning are strictly vetted against private and metadata IP ranges (`127.0.0.1`, `10.0.0.0/8`, `192.168.0.0/16`, `169.254.169.254`).
-* **Secret Redaction**: When client tokens are detected, the response caps visible characters at 6 characters (`ghp_3a9f••••••••`) to prevent echoing live secrets to viewers.
-* **HTTP Security Headers**: Defined in [`netlify.toml`](file:///c:/Users/Lenovo/Documents/vibe%20codding/netlify.toml#L31-L40), ensuring A+ grades for the SiteProof application itself.
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              DEFENSIVE SECURITY MODEL                                  │
+├───────────────────────────────┬────────────────────────────────────────────────────────┤
+│ Inbound URL Guard (SSRF)      │ Blocks localhost, 127.0.0.1, 10.0.0.0/8, 169.254.169. │
+│ Serverless Secret Isolation   │ NVIDIA_API_KEY never touches client bundle or git repo.│
+│ Secret Token Redaction        │ Client script leaks masked to 6 characters max.        │
+│ Error Leakage Prevention      │ 500 responses return clean messages, zero stack traces.│
+│ Strict HTTP Security Headers  │ HSTS 2-years, X-Frame-Options DENY, X-Content-Type.    │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```

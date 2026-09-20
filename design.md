@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![SiteProof Design](docs/assets/siteproof_overview.jpg)
+<img src="./docs/assets/siteproof_overview.jpg" width="100%" alt="SiteProof UI Design System" />
 
 **The Obsidian & Mint Cyberpunk Aesthetic for High-Trust Web Quality Audits**
 
@@ -14,35 +14,34 @@
 
 ---
 
+> [!TIP]
+> **💡 How to View Visual Markdown in your IDE:**
+> Press **`Ctrl + Shift + V`** (or click the **Open Preview to the Side** icon 📖 in the top-right corner of your editor window) to view the rendered images, diagrams, and live preview!
+> Below, we have also drawn the visual charts directly in text so they are visible even without preview mode.
+
+---
+
 ## 1. 🌟 Design Vision & Personality
 
 SiteProof is designed to convey **instant technical authority, speed, and trust**. 
 It looks like a high-end security command center, but speaks in simple, friendly, and non-intimidating plain English.
 
-```mermaid
-mindmap
-  root((SiteProof Aesthetic))
-    Visual Mood
-      Dark Obsidian Canvas
-      Electric Mint Highlights
-      Subtle Glassmorphism
-      Crisp Data Gauges
-    Emotional Impact
-      Unshakable Trust
-      Effortless Speed
-      High-Leverage AI Empowerment
-      Jargon-Free Clarity
-    Component Feel
-      Thin Glowing Borders
-      Tactile Micro-Interactions
-      Smooth Motion Accents
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        SITEPROOF VISUAL ESSENCE                        │
+├─────────────────────────┬──────────────────────────────────────────────┤
+│ 🌌 Dark Obsidian Canvas │ Deep #080C14 base with soft ambient glow     │
+│ 🟢 Electric Mint Accent │ #00F5A0 highlights for CTAs & high scores    │
+│ 🪟 Glassmorphism Layers │ Subtle translucent card surfaces (#0D1627)   │
+│ ⚡ Data Visualization   │ Circular radial progress dials & score chips │
+└─────────────────────────┴──────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 2. 🎨 Color Token Palette
 
-The entire color system is defined in [`src/styles/tokens.css`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/styles/tokens.css) using Tailwind CSS v4 custom theme tokens:
+The entire color system is defined in `src/styles/tokens.css` using Tailwind CSS v4 custom theme tokens:
 
 | Token Name | Hex Code | RGB | Visual Preview | Purpose & Usage |
 | :--- | :--- | :--- | :---: | :--- |
@@ -62,16 +61,13 @@ The entire color system is defined in [`src/styles/tokens.css`](file:///c:/Users
 SiteProof uses three specialized Google Fonts tailored for modern web applications:
 
 ```
-Headings & Display:     Outfit / Plus Jakarta Sans (Bold, high-impact titles)
-Body & Microcopy:       Plus Jakarta Sans / Inter (Clean legibility at all scales)
-Scores, Code & URLs:    JetBrains Mono (Monospaced data, status codes, prompt boxes)
-```
-
-```mermaid
-graph LR
-    H1["Hero Headline<br>Outfit Bold 56px<br>#F3F4F6"] --> H2["Section Header<br>Plus Jakarta Sans 28px<br>#F3F4F6"]
-    H2 --> Body["Body Text<br>Inter Regular 15px<br>#9CA3AF"]
-    H2 --> Mono["Technical Data / Prompts<br>JetBrains Mono 13px<br>#00F5A0"]
+┌────────────────────────────────────────────────────────────────────────┐
+│ TYPOGRAPHY SCALE                                                       │
+├────────────────────────────────────────────────────────────────────────┤
+│ Title Headlines  : Outfit / Plus Jakarta Sans (Bold, high impact)      │
+│ Body & Subtitles : Plus Jakarta Sans / Inter (Crisp readability)       │
+│ Scores & Prompts : JetBrains Mono (Monospace precision, code boxes)    │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

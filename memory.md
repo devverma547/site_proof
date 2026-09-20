@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![SiteProof Memory](docs/assets/siteproof_overview.jpg)
+<img src="./docs/assets/siteproof_overview.jpg" width="100%" alt="SiteProof Overview" />
 
 **Core Project Philosophy, Environment Truths, and Architectural Memory**
 
@@ -11,6 +11,13 @@
 [![Security Level: High (SSRF + Masked Secrets)](https://img.shields.io/badge/Security%20Level-High%20(Hardened)-00C7B7?style=for-the-badge)](#)
 
 </div>
+
+---
+
+> [!TIP]
+> **💡 How to View Visual Markdown in your IDE:**
+> Press **`Ctrl + Shift + V`** (or click the **Open Preview to the Side** icon 📖 in the top-right corner of your editor window) to view the rendered images, diagrams, and live preview!
+> Below, we have also drawn the visual charts directly in text so they are visible even without preview mode.
 
 ---
 
@@ -26,14 +33,16 @@ SiteProof was created to solve a major blind spot in the modern AI website creat
 
 ## 2. 📜 Evolution History & Key Decisions
 
-```mermaid
-timeline
-    title SiteProof Evolution Timeline
-    Genesis : Rapid Scanner Concept : Initial PageSpeed & Lighthouse integration
-    Security Pivot : Key Hardening : Migrated NVIDIA API key to Netlify serverless : Added SSRF & secret masking
-    Feature Expansion : Mozilla Observatory : Added live HTTP security headers grading (A+ to F) : Added Client script bundle secret leak AST scanner
-    Frictionless UX : Removed Pricing Barriers : Added zero-input /sample-report preview : Enabled Google OAuth & lightweight Supabase scan history
-    Current Polish : Launch Candidate : High-speed parallel orchestration : 99%+ architectural documentation alignment
+```
+2026-08 ─────────────────────────────────────────────────────────────────────────────► 2026-09
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ GENESIS CONCEPT │───►│ SECURITY PIVOT  │───►│ DEMO & UX POLISH│───►│ LAUNCH READY    │
+├─────────────────┤    ├─────────────────┤    ├─────────────────┤    ├─────────────────┤
+│ • PageSpeed API │    │ • Move NVIDIA   │    │ • /sample-report│    │ • Parallel scans│
+│ • Lighthouse CWV│    │   key to Netlify│    │   instant demo  │    │   under 15s     │
+│ • Basic scores  │    │ • Mozilla Audit │    │ • Removed price │    │ • Hardened SSRF │
+│                 │    │ • Secret Scanner│    │   barriers      │    │ • Supabase Auth │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 1. **Removal of Pricing Friction**: Early iterations considered pricing gates, but the user chose to remove the pricing section for launch to focus entirely on virality, user adoption, and trust.
@@ -60,14 +69,14 @@ timeline
 
 ## 4. 🧭 Key Files Map
 
-* [`src/App.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/App.jsx) — Root router with `lazyWithRetry` route chunk recovery.
-* [`src/pages/landing/LandingPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/landing/LandingPage.jsx) — Primary conversion homepage with live scan input.
-* [`src/pages/report/ReportPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/report/ReportPage.jsx) — Comprehensive 7-module audit report dashboard.
-* [`src/pages/report/SampleReportPage.jsx`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/pages/report/SampleReportPage.jsx) — Frictionless demo report for new visitors.
-* [`src/services/scanner.service.js`](file:///c:/Users/Lenovo/Documents/vibe%20codding/src/services/scanner.service.js) — The core parallel scan coordinator.
-* [`netlify/functions/`](file:///c:/Users/Lenovo/Documents/vibe%20codding/netlify/functions/) — Serverless functions powering AI and external APIs securely.
-* [`database/supabase_migration.sql`](file:///c:/Users/Lenovo/Documents/vibe%20codding/database/supabase_migration.sql) — Supabase RLS policies and table structures.
-* [`netlify.toml`](file:///c:/Users/Lenovo/Documents/vibe%20codding/netlify.toml) — Production build commands, caching, and security headers.
+* `src/App.jsx` — Root router with `lazyWithRetry` route chunk recovery.
+* `src/pages/landing/LandingPage.jsx` — Primary conversion homepage with live scan input.
+* `src/pages/report/ReportPage.jsx` — Comprehensive 7-module audit report dashboard.
+* `src/pages/report/SampleReportPage.jsx` — Frictionless demo report for new visitors.
+* `src/services/scanner.service.js` — The core parallel scan coordinator.
+* `netlify/functions/` — Serverless functions powering AI and external APIs securely.
+* `database/supabase_migration.sql` — Supabase RLS policies and table structures.
+* `netlify.toml` — Production build commands, caching, and security headers.
 
 ---
 
