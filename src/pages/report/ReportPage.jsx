@@ -10,7 +10,7 @@ import {
 import { scannerService } from '../../services/scanner.service';
 import { buildModules } from '../../services/lighthouse.service';
 import { useAuth } from '../../contexts/AuthContext';
-import { calculateProjectedScore, normalizeActionPlanImpacts, getVibeTranslation, getVibeVerdict } from '../../utils/reportScoring';
+import { calculateProjectedScore, normalizeActionPlanImpacts } from '../../utils/reportScoring';
 
 const loadingSteps = [
   "Initializing SiteProof audit engine...",
@@ -401,8 +401,8 @@ export default function ReportPage() {
   // Web Vitals
   const webVitals = reportData?.webVitals || {};
 
-  // Verdict — vibe-coder-friendly language
-  const verdict = getVibeVerdict(targetScore);
+  // Verdict
+  const verdict = ai?.verdict || (targetScore >= 90 ? 'Production Ready' : targetScore >= 75 ? 'Needs Minor Fixes' : targetScore >= 50 ? 'Needs Work Before Launch' : 'Critical Issues Found');
   const verdictColor = targetScore >= 90 ? 'emerald' : targetScore >= 75 ? 'blue' : targetScore >= 50 ? 'amber' : 'red';
 
   // Summary
@@ -709,7 +709,7 @@ export default function ReportPage() {
         {reportData && Object.values(webVitals).some(v => v !== null && v !== undefined) && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Site Speed & Responsiveness</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Core Web Vitals</h2>
               <span className="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold uppercase tracking-wider">
                 Real User Data · Google CrUX
               </span>
@@ -717,12 +717,12 @@ export default function ReportPage() {
             
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
-                { key: 'lcp', label: 'Page Load Speed', abbr: 'LCP', unit: 'ms' },
-                { key: 'fcp', label: 'First Visual', abbr: 'FCP', unit: 'ms' },
-                { key: 'cls', label: 'Layout Stability', abbr: 'CLS', unit: '' },
-                { key: 'fid', label: 'Click Response', abbr: 'FID', unit: 'ms' },
-                { key: 'inp', label: 'Interaction Speed', abbr: 'INP', unit: 'ms' },
-                { key: 'ttfb', label: 'Server Speed', abbr: 'TTFB', unit: 'ms' },
+                { key: 'lcp', label: 'LCP', desc: 'Largest Contentful Paint', unit: 'ms' },
+                { key: 'fcp', label: 'FCP', desc: 'First Contentful Paint', unit: 'ms' },
+                { key: 'cls', label: 'CLS', desc: 'Cumulative Layout Shift', unit: '' },
+                { key: 'fid', label: 'FID', desc: 'First Input Delay', unit: 'ms' },
+                { key: 'inp', label: 'INP', desc: 'Interaction to Next Paint', unit: 'ms' },
+                { key: 'ttfb', label: 'TTFB', desc: 'Time to First Byte', unit: 'ms' },
               ].map((vital) => {
                 const value = webVitals[vital.key];
                 const status = getVitalStatus(vital.key, value);
@@ -740,7 +740,7 @@ export default function ReportPage() {
                     {value !== null && value !== undefined && vital.unit && (
                       <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono">{vital.unit}</div>
                     )}
-                    <div className="text-[9px] text-slate-400 dark:text-gray-600">({vital.abbr})</div>
+                    <div className="text-[9px] text-slate-400 dark:text-gray-600">{vital.desc}</div>
                     {value !== null && value !== undefined && (
                       <div className={`text-[9px] font-bold uppercase tracking-wider ${
                         status === 'good' ? 'text-[#00F5A0]' : status === 'needs-improvement' ? 'text-amber-500' : 'text-red-500'
@@ -759,7 +759,7 @@ export default function ReportPage() {
         {modules.length > 0 && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Your Vibe Breakdown</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Audit Traces & Modules</h2>
               <span className="text-xs text-slate-500 dark:text-gray-400 font-mono">Each module scored out of 10</span>
             </div>
 
@@ -831,17 +831,7 @@ export default function ReportPage() {
                           <IconComponent size={16} />
                         </div>
                         <div>
-                          {(() => {
-                            const vibe = getVibeTranslation(m.id);
-                            return vibe ? (
-                              <>
-                                <h3 className="text-base font-bold text-slate-900 dark:text-white">{vibe.vibeTitle}</h3>
-                                <div className="text-[10px] text-slate-500 dark:text-gray-500 font-mono mt-0.5">{m.title || m.category}</div>
-                              </>
-                            ) : (
-                              <h3 className="text-base font-bold text-slate-900 dark:text-white">{m.title || m.category}</h3>
-                            );
-                          })()}
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white">{m.title || m.category}</h3>
                           {/* Data source badge */}
                           <div className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded text-[9px] font-semibold border ${sourceInfo.color}`}>
                             <SourceIcon size={9} />
@@ -859,7 +849,7 @@ export default function ReportPage() {
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">{(() => { const vibe = getVibeTranslation(m.id); return vibe ? vibe.vibeDescription : m.description; })()}</p>
+                    <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">{m.description}</p>
 
                     {/* Mozilla Observatory Highlight Banner if security module */}
                     {m.id === 'security' && (m.observatory || observatory) && (
@@ -1090,7 +1080,7 @@ export default function ReportPage() {
                       onClick={() => setActiveFixModal(item)}
                       className="px-3.5 py-1.5 rounded-lg bg-[#00F5A0]/10 hover:bg-[#00F5A0] text-[#00F5A0] hover:text-slate-950 font-bold text-xs border border-[#00F5A0]/30 transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      ✨ Simulate Fix <ArrowUpRight size={14} />
+                      View AI Prompt <ArrowUpRight size={14} />
                     </button>
                   </div>
                 </div>
@@ -1139,7 +1129,7 @@ export default function ReportPage() {
 
       </div>
 
-      {/* BEFORE & AFTER FIX SIMULATOR MODAL */}
+      {/* AI FIX PROMPT MODAL */}
       <AnimatePresence>
         {activeFixModal && (
           <motion.div 
@@ -1155,150 +1145,85 @@ export default function ReportPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-4xl bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-[#00F5A0]/20 rounded-2xl overflow-hidden shadow-2xl dark:shadow-[0_0_60px_rgba(0,245,160,0.08)] flex flex-col max-h-[90vh]"
+              className="w-full max-w-3xl bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10 shrink-0">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-white/10 shrink-0">
+                <div className="flex items-center gap-2.5">
                   <Sparkles className="text-[#00F5A0]" size={20} aria-hidden="true" />
-                  <div>
-                    <h3 id="report-fix-modal-title" className="text-base font-bold text-slate-900 dark:text-white">✨ Fix Simulator</h3>
-                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{activeFixModal.title}</p>
-                  </div>
+                  <h3 id="report-fix-modal-title" className="text-base font-bold text-slate-900 dark:text-white">AI Fix Prompt — {activeFixModal.title}</h3>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${
-                    activeFixModal.priority === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
-                    activeFixModal.priority === 'HIGH' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
-                    'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                  }`}>{activeFixModal.priority}</span>
-                  <button 
-                    onClick={() => setActiveFixModal(null)}
-                    aria-label="Close modal"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F5A0]"
-                  >
-                    <X size={18} aria-hidden="true" />
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setActiveFixModal(null)}
+                  aria-label="Close modal"
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F5A0]"
+                >
+                  <X size={18} aria-hidden="true" />
+                </button>
               </div>
 
               {/* Scrollable Content */}
-              <div className="p-5 overflow-y-auto space-y-5">
-
-                {/* Vibe Score Boost Banner */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#080C14] border border-slate-200 dark:border-[#00F5A0]/20 dark:shadow-[0_0_30px_rgba(0,245,160,0.05)]">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">Projected Vibe Boost</span>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#00F5A0]/10 text-[#00F5A0] border border-[#00F5A0]/30">+{activeFixModal.impact?.replace?.(/[^\d.]/g, '') || '?'} Vibe Boost 🚀</span>
+              <div className="p-6 overflow-y-auto space-y-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                      activeFixModal.priority === 'CRITICAL' ? 'bg-red-500/10 text-red-400' :
+                      activeFixModal.priority === 'HIGH' ? 'bg-amber-500/10 text-amber-400' :
+                      'bg-blue-500/10 text-blue-400'
+                    }`}>{activeFixModal.priority}</span>
+                    <span className="text-xs text-slate-500 dark:text-gray-400">{activeFixModal.time} | Impact: {activeFixModal.impact}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-extrabold font-mono text-slate-400 dark:text-gray-400">{displayScore}</div>
-                      <div className="text-[10px] text-slate-500 dark:text-gray-500">Current</div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="w-full h-2.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden relative">
-                        <div className="h-full bg-slate-300 dark:bg-gray-600 rounded-full" style={{ width: `${displayScore}%` }} />
-                        <motion.div 
-                          initial={{ width: `${displayScore}%` }}
-                          animate={{ width: `${projectedScore}%` }}
-                          transition={{ duration: 1.2, delay: 0.3 }}
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#00F5A0] to-[#00B4D8] rounded-full"
-                        />
-                      </div>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-[9px] text-slate-400 dark:text-gray-500">0</span>
-                        <span className="text-[9px] text-[#00F5A0] font-bold">Target: {projectedScore}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-gray-500">100</span>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-extrabold font-mono text-[#00F5A0]">{projectedScore}</div>
-                      <div className="text-[10px] text-[#00F5A0]">Projected</div>
-                    </div>
-                  </div>
+                  <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">{activeFixModal.detail}</p>
                 </div>
 
-                {/* Before & After Comparison */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* BEFORE */}
-                  <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-500/20 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <XCircle size={16} className="text-red-500" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">Before (Current Issue)</span>
+                <div className="space-y-4">
+                  {/* Prompt Box */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 flex items-center gap-1.5"><Code size={14} aria-hidden="true" /> LLM Prompt — Paste into v0 / Bolt / Cursor</span>
+                      <button
+                        onClick={() => handleCopyPrompt(activeFixModal.prompt)}
+                        aria-label="Copy AI fix prompt to clipboard"
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 dark:text-[#00F5A0] hover:bg-[#00F5A0]/10 transition-colors flex items-center gap-1.5 cursor-pointer border border-emerald-500/30 dark:border-[#00F5A0]/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F5A0]"
+                      >
+                        {copiedPrompt ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
+                        {copiedPrompt ? 'Copied!' : 'Copy Prompt 📋'}
+                      </button>
                     </div>
-                    <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed">{activeFixModal.detail}</p>
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">
-                        ⚠️ {activeFixModal.time || 'Impacting score'}
-                      </span>
+                    <div className="relative">
+                      <pre className="p-4 rounded-xl bg-slate-100 dark:bg-[#05080E] border border-slate-200 dark:border-white/10 font-mono text-sm text-slate-800 dark:text-gray-300 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+                        {activeFixModal.prompt}
+                      </pre>
                     </div>
+                    <p className="text-[11px] text-slate-500 dark:text-gray-400 italic pt-1">
+                      Paste this into Antigravity, Cursor, v0, Bolt.new, Lovable, or ChatGPT. <strong>Important:</strong> After applying fixes, ensure changes are deployed to your live site before rescanning to see your updated score.
+                    </p>
                   </div>
 
-                  {/* AFTER */}
-                  <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-[#00F5A0]" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">After (AI Remediation)</span>
-                    </div>
-                    <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed">Apply the AI fix prompt below and this issue will be resolved. Expected boost: <strong className="text-[#00F5A0]">{activeFixModal.impact}</strong>.</p>
-                    {activeFixModal.code && (
+                  {/* Code Preview Box */}
+                  {activeFixModal.code && (
+                    <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-white/5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 flex items-center gap-1.5">Example Output</span>
+                      </div>
                       <div className="relative">
-                        <pre className="p-3 rounded-lg bg-slate-900 dark:bg-black/40 border border-emerald-500/20 font-mono text-[11px] text-emerald-400 overflow-x-auto max-h-28 overflow-y-auto leading-relaxed">
+                        <pre className="p-4 rounded-xl bg-slate-900 dark:bg-black/40 border border-slate-700 dark:border-white/5 font-mono text-xs text-emerald-400 overflow-x-auto max-h-48 overflow-y-auto">
                           {activeFixModal.code}
                         </pre>
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                        ✅ {activeFixModal.impact} improvement
-                      </span>
                     </div>
-                  </div>
-                </div>
-
-                {/* AI Fix Prompt — Copy Section */}
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 flex items-center gap-1.5"><Code size={14} aria-hidden="true" /> AI Fix Prompt</span>
-                    <button
-                      onClick={() => handleCopyPrompt(activeFixModal.prompt)}
-                      aria-label="Copy AI fix prompt to clipboard"
-                      className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 dark:text-[#00F5A0] hover:bg-[#00F5A0]/10 transition-colors flex items-center gap-1.5 cursor-pointer border border-emerald-500/30 dark:border-[#00F5A0]/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00F5A0]"
-                    >
-                      {copiedPrompt ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
-                      {copiedPrompt ? 'Copied!' : 'Copy Prompt 📋'}
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <pre className="p-4 rounded-xl bg-slate-100 dark:bg-[#05080E] border border-slate-200 dark:border-white/10 font-mono text-sm text-slate-800 dark:text-gray-300 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                      {activeFixModal.prompt}
-                    </pre>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400 italic pt-1">
-                    Paste this into Cursor, v0, Bolt.new, Lovable, Antigravity, or Claude. <strong>Important:</strong> After applying fixes, deploy to your live site and re-scan to see your updated vibe score.
-                  </p>
+                  )}
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="p-5 border-t border-slate-200 dark:border-white/10 shrink-0 flex items-center justify-between bg-slate-50 dark:bg-black/20">
-                <span className="text-[10px] text-slate-500 dark:text-gray-500">Formatted for Claude, Cursor, v0, Lovable & Bolt</span>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleCopyPrompt(activeFixModal.prompt)}
-                    className="px-5 py-2.5 rounded-xl bg-[#00F5A0] hover:bg-[#00E093] text-slate-950 font-bold text-sm cursor-pointer shadow-[0_0_15px_rgba(0,245,160,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 flex items-center gap-2"
-                  >
-                    {copiedPrompt ? <Check size={14} /> : <Copy size={14} />}
-                    {copiedPrompt ? 'Copied!' : '📋 Copy AI Fix Prompt'}
-                  </button>
-                  <button
-                    onClick={() => setActiveFixModal(null)}
-                    className="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 text-slate-700 dark:text-gray-300 font-semibold text-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
-                  >
-                    Done
-                  </button>
-                </div>
+              <div className="p-6 border-t border-slate-200 dark:border-white/10 shrink-0 flex justify-end bg-slate-50 dark:bg-black/20">
+                <button
+                  onClick={() => setActiveFixModal(null)}
+                  className="px-6 py-2.5 rounded-xl bg-[#00F5A0] hover:bg-[#00E093] text-slate-950 font-bold text-sm cursor-pointer shadow-[0_0_15px_rgba(0,245,160,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+                >
+                  Done
+                </button>
               </div>
             </motion.div>
           </motion.div>

@@ -25,7 +25,3 @@ dist-ssr
 *.sw?
 .env
 .env.*
-
-public/design-preview/
-copy_images.ps1
-public/report-section-mockup.svg
