@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Mail, Send, CheckCircle2, Bug, Lightbulb, AlertCircle } from 'lucide-react';
 import { contactService } from '../../services/database.service';
 
