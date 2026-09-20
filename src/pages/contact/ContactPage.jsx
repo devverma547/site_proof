@@ -9,7 +9,7 @@ export default function ContactPage() {
     name: '',
     email: '',
     subject: 'Report a Bug / Website Issue',
-    message: ''
+    message: '',
   });
 
   const handleSubmit = async (e) => {
@@ -38,165 +38,178 @@ export default function ContactPage() {
     }
   };
 
+  const detailCards = [
+    {
+      icon: Bug,
+      title: 'Found a Bug or Issue?',
+      text: 'If something is not working right or you see an error on the site, tell us right away. We prioritize fixing bugs reported by our users.',
+      accent: 'emerald',
+      meta: 'Average resolution time: < 24 hours',
+    },
+    {
+      icon: Mail,
+      title: 'Direct Email Support',
+      text: 'support@siteproof.io',
+      accent: 'blue',
+      meta: 'For security & general concerns',
+    },
+    {
+      icon: Lightbulb,
+      title: 'Suggestions & Ideas',
+      text: 'Want a new scanner module or feature? Share your suggestions with our dev team.',
+      accent: 'amber',
+      meta: 'Product ideas welcome',
+    },
+  ];
+
   return (
-    <div className="w-full flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-10">
-      {/* Banner / Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#00F5A0] text-xs font-semibold">
-            <Bug size={14} /> Help Us Improve • Bug Reports & Feedback Welcome
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Get in touch with <span className="text-gradient">SiteProof</span>
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400 leading-relaxed">
-            Spotted a bug, glitch, or broken link on our website? Or have ideas to make SiteProof better? 
-            <br className="hidden sm:inline" />
-            Let us know! Your bug reports and feedback directly help us fix issues and build a better experience for everyone.
-          </p>
+    <div className="w-full flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-12">
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center max-w-3xl mx-auto space-y-5"
+      >
+        <div className="section-eyebrow mx-auto">
+          <Bug size={14} /> Help us improve
         </div>
+        <h1 className="section-title text-4xl sm:text-5xl lg:text-6xl">
+          Get in touch with <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F5A0] via-[#00E093] to-[#00B4D8]">SiteProof</span>
+        </h1>
+        <p className="section-copy max-w-2xl mx-auto">
+          Spotted a bug, glitch, or broken link on our website? Or have ideas to make SiteProof better?
+          Let us know. Your feedback directly helps us fix issues and build a better experience for everyone.
+        </p>
+      </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Contact Details Column */}
-          <div className="space-y-4">
-            
-            {/* Bug & Problem Reporting Card */}
-            <div className="p-6 rounded-2xl bg-emerald-500/5 dark:bg-[#0D1527] border border-emerald-500/30 dark:border-emerald-500/20 shadow-sm space-y-3 relative overflow-hidden">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-[#00F5A0] flex items-center justify-center">
-                <Bug size={20} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {detailCards.map((card, index) => {
+          const Icon = card.icon;
+          const iconClasses =
+            card.accent === 'emerald'
+              ? 'bg-emerald-500/10 text-[#00F5A0] border border-emerald-500/20'
+              : card.accent === 'blue'
+                ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                : 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
+
+          return (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 + index * 0.08 }}
+              className="soft-card hover-lift rounded-3xl p-6 space-y-4"
+            >
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${iconClasses}`}>
+                <Icon size={20} />
               </div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Found a Bug or Issue?</h3>
-              <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
-                If something isn't working right or you see an error on the site, tell us right away. We prioritize fixing bugs reported by our users!
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{card.title}</h3>
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-gray-400">{card.text}</p>
+              <div className="text-[11px] font-semibold text-[#00F5A0] flex items-center gap-1.5">
+                {card.accent === 'emerald' && <AlertCircle size={13} />}
+                {card.meta}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="md:col-span-3 soft-card rounded-[2rem] p-6 sm:p-8"
+        >
+          {submitted ? (
+            <div className="py-8 text-center space-y-4">
+              <CheckCircle2 className="w-14 h-14 text-[#00F5A0] mx-auto animate-bounce" />
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Thank you for your feedback!</h3>
+              <p className="text-sm text-slate-600 dark:text-gray-400 max-w-lg mx-auto leading-relaxed">
+                Your message has been securely logged. If you reported a website bug or technical issue, our development team will inspect and fix it promptly.
               </p>
-              <div className="pt-1 text-[11px] font-semibold text-[#00F5A0] flex items-center gap-1.5">
-                <AlertCircle size={13} /> Average resolution time: &lt; 24 hours
-              </div>
+              <button
+                onClick={() => {
+                  setSubmitted(false);
+                  setFormData({ name: '', email: '', subject: 'Report a Bug / Website Issue', message: '' });
+                }}
+                className="mt-2 rounded-full bg-slate-100 dark:bg-white/5 px-6 py-2.5 text-sm font-semibold text-slate-900 dark:text-white transition hover:bg-slate-200 dark:hover:bg-white/10"
+              >
+                Submit another report or question
+              </button>
             </div>
-
-            {/* Email Support Card */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-white/5 shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center">
-                <Mail size={20} />
-              </div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Direct Email Support</h3>
-              <p className="text-xs text-slate-600 dark:text-gray-400">support@siteproof.io</p>
-              <p className="text-[11px] text-slate-500 dark:text-gray-500">For security & general concerns</p>
-            </div>
-
-            {/* Feature Suggestions Card */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-white/5 shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 dark:text-amber-400 flex items-center justify-center">
-                <Lightbulb size={20} />
-              </div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Suggestions & Ideas</h3>
-              <p className="text-xs text-slate-600 dark:text-gray-400">
-                Want a new scanner module or feature? Share your suggestions with our dev team.
-              </p>
-            </div>
-
-          </div>
-
-          {/* Contact Form Column */}
-          <div className="md:col-span-2 p-8 rounded-3xl bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-white/5 shadow-2xl">
-            {submitted ? (
-              <div className="py-8 text-center space-y-4">
-                <CheckCircle2 className="w-14 h-14 text-[#00F5A0] mx-auto animate-bounce" />
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Thank You for Your Feedback!</h3>
-                <p className="text-sm text-slate-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
-                  Your message has been securely logged. If you reported a website bug or technical issue, our development team will inspect and fix it promptly.
-                </p>
-
-                <div className="pt-2">
-                  <button
-                    onClick={() => {
-                      setSubmitted(false);
-                      setFormData({ name: '', email: '', subject: 'Report a Bug / Website Issue', message: '' });
-                    }}
-                    className="px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-semibold hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
-                  >
-                    Submit another report or question
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Send Us a Message</h2>
-                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-                    Select a topic below to let us know how we can help or what needs fixing.
-                  </p>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Send us a message</h2>
+                  <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Select the topic that best matches your issue or idea.</p>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Your Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Alex Mercer"
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#080C14] border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/30 transition-colors"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="alex@company.com"
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#080C14] border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/30 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* Useful & Relevant Subject Options */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300 flex items-center justify-between">
-                    <span>What is this regarding? (Subject)</span>
-                    <span className="text-[11px] font-normal text-emerald-600 dark:text-[#00F5A0]">Select topic</span>
-                  </label>
-                  <select
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#080C14] border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/30 transition-colors cursor-pointer"
-                  >
-                    <option value="Report a Bug / Website Issue">🐛 Report a Bug / Website Issue (Glitch, error, broken link)</option>
-                    <option value="Feature Request & Improvement">💡 Feature Request & Improvement (Suggest an enhancement)</option>
-                    <option value="Audit Report Support">📊 Audit Report Support (Help understanding scan results)</option>
-                    <option value="General Inquiry & Feedback">💬 General Inquiry & Feedback</option>
-                    <option value="Enterprise & Business Plan">💼 Enterprise & Business Inquiry</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Message / Details</label>
-                  <textarea
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-gray-300">Your name</label>
+                  <input
+                    type="text"
                     required
-                    rows={5}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder={getPlaceholder()}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#080C14] border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/30 transition-colors"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Alex Mercer"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/20 transition-all dark:border-white/10 dark:bg-[#080C14] dark:text-white"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 rounded-xl bg-[#00F5A0] hover:bg-[#00E093] disabled:opacity-50 text-slate-950 font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,245,160,0.3)] flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {isSubmitting ? 'Saving Message...' : 'Send Message / Report'} <Send size={16} />
-                </button>
-              </form>
-            )}
-          </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-gray-300">Email address</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="alex@company.com"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/20 transition-all dark:border-white/10 dark:bg-[#080C14] dark:text-white"
+                  />
+                </div>
+              </div>
 
-        </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-gray-300">Subject</label>
+                <select
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/20 transition-all dark:border-white/10 dark:bg-[#080C14] dark:text-white"
+                >
+                  <option value="Report a Bug / Website Issue">🐛 Report a Bug / Website Issue</option>
+                  <option value="Feature Request & Improvement">💡 Feature Request & Improvement</option>
+                  <option value="Audit Report Support">📊 Audit Report Support</option>
+                  <option value="General Inquiry & Feedback">💬 General Inquiry & Feedback</option>
+                  <option value="Enterprise & Business Plan">💼 Enterprise & Business Inquiry</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-gray-300">Message</label>
+                <textarea
+                  required
+                  rows={6}
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  placeholder={getPlaceholder()}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:border-[#00F5A0] focus:ring-2 focus:ring-[#00F5A0]/20 transition-all dark:border-white/10 dark:bg-[#080C14] dark:text-white"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#00F5A0] px-7 py-3 font-bold text-slate-950 shadow-[0_0_24px_rgba(0,245,160,0.22)] transition-all hover:-translate-y-0.5 hover:bg-[#00E093] disabled:opacity-60"
+              >
+                {isSubmitting ? 'Saving message...' : 'Send Message'} <Send size={16} />
+              </button>
+            </form>
+          )}
+        </motion.div>
+      </div>
     </div>
   );
 }

@@ -69,7 +69,7 @@ function App() {
                 </a>
 
                 <Navbar />
-                <main id="main-content" tabIndex="-1" className="flex-1 pt-16 flex flex-col focus:outline-none">
+                <main id="main-content" tabIndex="-1" className="page-shell flex-1 pt-16 flex flex-col focus:outline-none">
                   <Suspense fallback={<LoadingScreen message="Loading page..." />}>
                     <Routes>
                       {/* Public Routes */}

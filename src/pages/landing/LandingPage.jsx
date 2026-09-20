@@ -218,7 +218,7 @@ export default function LandingPage() {
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00F5A0]/10 border border-[#00F5A0]/30 text-xs font-semibold text-[#00F5A0] dark:text-[#00F5A0] text-emerald-600 shadow-[0_0_20px_rgba(0,245,160,0.2)]"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00F5A0]/12 border border-[#00F5A0]/30 text-xs font-semibold text-[#00F5A0] shadow-[0_0_20px_rgba(0,245,160,0.18)] backdrop-blur-sm"
             >
               <Zap size={14} className="text-[#00F5A0]" />
               <span>⚡ Built for Cursor, Bolt, Lovable, v0 & ChatGPT</span>
@@ -229,7 +229,7 @@ export default function LandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto leading-[1.1]"
+              className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto leading-[1.05]"
             >
               Scan your AI-built site before launch.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F5A0] via-[#00E093] to-[#00B4D8]">Get copy-paste fix prompts.</span>
@@ -240,7 +240,7 @@ export default function LandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-base sm:text-lg text-slate-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed"
+              className="text-base sm:text-lg text-slate-700 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed"
             >
               Find hidden bugs, security flaws, and layout issues in seconds. Get ready-to-use AI prompts to paste directly into your IDE and fix everything instantly.
             </motion.p>
@@ -254,9 +254,9 @@ export default function LandingPage() {
             >
               <form 
                 onSubmit={handleStartScan}
-                className="max-w-xl mx-auto flex flex-col gap-3.5 p-4 rounded-2xl bg-white dark:bg-[#0F1726]/90 border border-slate-300 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-[0_0_40px_rgba(0,245,160,0.15)] ring-1 ring-slate-200 dark:ring-[#00F5A0]/20 focus-within:ring-2 focus-within:ring-[#00F5A0] focus-within:border-[#00F5A0] transition-all backdrop-blur-2xl"
+                className="max-w-xl mx-auto flex flex-col gap-3.5 p-4 rounded-2xl bg-white/80 dark:bg-[#0F1726]/90 border border-slate-200/80 dark:border-white/10 shadow-[0_30px_80px_rgba(15,23,42,0.12)] dark:shadow-[0_0_40px_rgba(0,245,160,0.15)] ring-1 ring-slate-200/70 dark:ring-[#00F5A0]/20 focus-within:ring-2 focus-within:ring-[#00F5A0] focus-within:border-[#00F5A0] transition-all backdrop-blur-2xl"
               >
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#080C14]/70 border border-slate-300/80 dark:border-white/10 focus-within:border-[#00F5A0] focus-within:bg-white dark:focus-within:bg-[#080C14] transition-all min-h-[48px]">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#080C14]/70 border border-slate-200 dark:border-white/10 focus-within:border-[#00F5A0] focus-within:bg-white dark:focus-within:bg-[#080C14] transition-all min-h-[48px]">
                   <span className="text-slate-600 dark:text-gray-400 font-mono text-sm font-semibold shrink-0">https://</span>
                   <input
                     id="scan-input"
@@ -278,8 +278,8 @@ export default function LandingPage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#080C14]/70 border border-slate-300/80 dark:border-white/10 focus-within:border-[#00F5A0] focus-within:bg-white dark:focus-within:bg-[#080C14] transition-all min-h-[44px]">
-                  <GitBranch size={18} className="text-[#00F5A0] dark:text-[#00F5A0] shrink-0" />
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#080C14]/70 border border-slate-200 dark:border-white/10 focus-within:border-[#00F5A0] focus-within:bg-white dark:focus-within:bg-[#080C14] transition-all min-h-[44px]">
+                  <GitBranch size={18} className="text-[#00F5A0] shrink-0" />
                   <input
                     type="text"
                     value={githubRepoInput}
@@ -326,7 +326,7 @@ export default function LandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 pt-10 mt-6 border-t border-slate-200/60 dark:border-white/5"
+              className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 pt-10 mt-6 border-t border-slate-200/70 dark:border-white/5"
             >
               {/* Animated Score Gauge */}
               <AnimatedScoreGauge targetScore={87} duration={2.5} />
@@ -344,8 +344,8 @@ export default function LandingPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6 + i * 0.1 }}
-                    whileHover={{ scale: 1.03, borderColor: 'rgba(0,245,160,0.4)', boxShadow: '0 10px 25px -5px rgba(0,245,160,0.2)' }}
-                    className="p-4 rounded-2xl bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-white/5 text-center transition-all shadow-sm dark:shadow-none"
+                    whileHover={{ scale: 1.03, y: -4, borderColor: 'rgba(0,245,160,0.35)', boxShadow: '0 16px 32px -12px rgba(0,245,160,0.25)' }}
+                    className="p-4 rounded-2xl bg-white/80 dark:bg-[#0D1527] border border-slate-200/90 dark:border-white/5 text-center transition-all shadow-[0_18px_32px_rgba(15,23,42,0.06)] dark:shadow-none backdrop-blur-sm"
                   >
                     <div className="text-xl sm:text-2xl font-extrabold text-[#00F5A0] font-display">{stat.component}</div>
                     <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 font-medium">{stat.label}</div>
@@ -417,6 +417,57 @@ export default function LandingPage() {
             </motion.div>
 
             <InteractiveDemoVideo />
+          </div>
+        </section>
+
+        {/* SECTION: WHY TEAMS CHOOSE SITEPROOF */}
+        <section className="py-20 bg-[radial-gradient(circle_at_top,_rgba(0,245,160,0.10),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(0,245,160,0.10),transparent_55%)] border-t border-slate-200 dark:border-white/5">
+          <div className="max-w-6xl mx-auto px-4">
+            <motion.div
+              className="text-center max-w-2xl mx-auto mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <span className="text-xs font-mono text-[#00F5A0] uppercase tracking-widest font-semibold">Why teams choose us</span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-2">Built to turn noisy AI output into launch-safe decisions.</h2>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: <Shield className="w-5 h-5 text-[#00F5A0]" />,
+                  title: 'Launch-ready visibility',
+                  text: 'Catch privacy leaks, SEO misses, security headers, and conversion blockers before users do.'
+                },
+                {
+                  icon: <Brain className="w-5 h-5 text-[#00F5A0]" />,
+                  title: 'AI workflow that actually ships',
+                  text: 'Turn every issue into a clear, copy-paste prompt for Cursor, Bolt, or ChatGPT without the fluff.'
+                },
+                {
+                  icon: <Activity className="w-5 h-5 text-[#00F5A0]" />,
+                  title: 'Faster iteration loops',
+                  text: 'See performance and quality problems in minutes, fix them faster, and keep release confidence high.'
+                }
+              ].map((feature, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  whileHover={{ y: -6 }}
+                  className="group h-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#0D1527]/70 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:shadow-none backdrop-blur-sm"
+                >
+                  <div className="mb-4 inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[#00F5A0]/10 border border-[#00F5A0]/20 group-hover:scale-105 transition-transform">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{feature.text}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
 
